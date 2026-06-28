@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 批量文档生成器 - 在线体验 Demo</title>
+  <meta name="description" content="AI 批量文档生成器在线体验：AI 字段识别 + AI 文案助手，模板+表格一键生成千份文档。" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+            accent: { 500: '#f59e0b', 600: '#d97706' },
+            violet: { 500: '#8b5cf6', 600: '#7c3aed' }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-20px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+    body { font-family: 'Noto Sans SC', system-ui, sans-serif; }
+    .glass { background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .glass-dark { background: rgba(15,23,42,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .typing-cursor::after { content: '|'; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .fade-in { animation: fadeIn .7s ease-out forwards; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+    .scene-card { transition: all .25s ease; }
+    .scene-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(14,165,233,0.25); }
+    .scene-card.active { ring: 2px; ring-color: #0ea5e9; border-color: #0ea5e9; background: #f0f9ff; }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .45;
+      z-index: 0;
+      animation: float 8s ease-in-out infinite;
+    }
+    .blob-1 { width: 360px; height: 360px; background: #7dd3fc; top: -120px; right: -80px; animation-delay: 0s; }
+    .blob-2 { width: 300px; height: 300px; background: #fbbf24; bottom: 80px; left: -100px; animation-delay: 2s; }
+    .blob-3 { width: 260px; height: 260px; background: #a78bfa; top: 40%; right: 10%; animation-delay: 4s; }
+    .gradient-text {
+      background: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all .35s ease;
+      z-index: 100;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .preview-paper {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: inset 0 0 60px rgba(14,165,233,0.04), 0 10px 40px -10px rgba(0,0,0,0.08);
+    }
+    .preview-honor {
+      background: linear-gradient(135deg, #fffbeb 0%, #ffffff 50%, #fffbeb 100%);
+      border: 2px solid #f59e0b;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-x-hidden">
+  <!-- Nav -->
+  <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-slate-200/80">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2 font-bold text-lg text-brand-700">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        AI 批量文档生成器
+      </a>
+      <div class="flex items-center gap-3">
+        <a href="#scenes" class="hidden md:block text-sm text-slate-600 hover:text-brand-700 px-3 py-1.5">场景模板</a>
+        <a href="#demo" class="px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition shadow-md shadow-brand-200">立即体验</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="relative pt-32 pb-20 px-4 overflow-hidden">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
+      <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold mb-5 border border-brand-200">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+        TRAE AI 创造力大赛 · 学习工作 / 社会公益
+      </span>
+      <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
+        一张模板 + 一份表格<br/>
+        <span class="gradient-text">千份智能文档一键生成</span>
+      </h1>
+      <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+        上传 Word/Excel 模板，AI 自动识别字段；输入关键信息，AI 文案助手生成正式正文。适合证书、邀请函、胸牌、通知等批量场景。
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#ai-copy" class="px-7 py-3.5 rounded-2xl bg-brand-600 text-white font-semibold shadow-xl shadow-brand-200 hover:bg-brand-700 transition hover:scale-105">体验 AI 文案助手</a>
+        <a href="#ai-fields" class="px-7 py-3.5 rounded-2xl bg-white text-brand-700 font-semibold border border-brand-200 shadow-lg hover:bg-brand-50 transition hover:scale-105">体验 AI 字段识别</a>
+      </div>
+
+      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div class="text-2xl font-black text-brand-600">10+</div>
+          <div class="text-xs text-slate-500 mt-1">场景模板</div>
+        </div>
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div class="text-2xl font-black text-violet-600">3</div>
+          <div class="text-xs text-slate-500 mt-1">文件格式</div>
+        </div>
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div class="text-2xl font-black text-accent-600">1000+</div>
+          <div class="text-xs text-slate-500 mt-1">份/分钟</div>
+        </div>
+        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
+          <div class="text-2xl font-black text-emerald-600">0</div>
+          <div class="text-xs text-slate-500 mt-1">代码基础</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section class="py-16 px-4">
+    <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
+        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-50 text-brand-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">AI 文案助手</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">选择证书、邀请函、通知等场景，输入关键信息，AI 自动生成符合语境的正式文案。</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
+        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-accent-100 to-orange-50 text-accent-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">AI 字段识别</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">上传 Word/Excel 模板，自动解析占位符、标签和数据列，一键推荐字段配置。</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
+        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        </div>
+        <h3 class="font-bold text-lg mb-2">实时预览 & 导出</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">填入数据即可预览生成效果，支持导出标准 Word 文档，零代码完成批量制作。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Copy Assistant -->
+  <section id="ai-copy" class="py-16 px-4 bg-white border-y border-slate-100 relative">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 via-violet-500 to-accent-500"></div>
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-10 text-center md:text-left">
+        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
+          <span class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center text-lg">01</span>
+          AI 文案助手
+        </h2>
+        <p class="text-slate-500 md:text-lg">选择使用场景，填写关键信息，AI 将生成可直接插入文档的正文。</p>
+      </div>
+
+      <!-- Scene Cards -->
+      <div id="scenes" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+        <!-- Generated by JS -->
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">收件人 / 获奖者姓名</label>
+            <input id="name" type="text" value="张晓明" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">事件 / 奖项 / 活动名称</label>
+            <input id="event" type="text" value="2026 年度销售冠军" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">颁奖单位 / 主办方</label>
+            <input id="issuer" type="text" value="字节跳动销售部" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
+          </div>
+          <div id="extra-field" class="hidden">
+            <label id="extra-label" class="block text-sm font-medium text-slate-700 mb-1.5">补充信息</label>
+            <input id="extra" type="text" value="" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
+          </div>
+          <button id="btn-generate-copy" class="w-full py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 transition shadow-lg shadow-brand-200 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            AI 生成文案
+          </button>
+        </div>
+        <div class="preview-paper rounded-2xl p-7 border border-slate-200 flex flex-col min-h-[280px]">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              生成结果
+            </span>
+            <div class="flex items-center gap-2">
+              <span id="copy-status" class="text-xs text-slate-400">点击左侧按钮生成</span>
+              <button id="btn-copy-result" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition hidden">复制</button>
+            </div>
+          </div>
+          <div id="copy-output" class="flex-1 whitespace-pre-wrap text-slate-800 leading-relaxed font-medium text-base"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Field Detection -->
+  <section id="ai-fields" class="py-16 px-4 bg-slate-50 relative">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-10 text-center md:text-left">
+        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
+          <span class="w-10 h-10 rounded-xl bg-accent-100 text-accent-600 flex items-center justify-center text-lg">02</span>
+          AI 字段识别
+        </h2>
+        <p class="text-slate-500 md:text-lg">粘贴模板文本，或上传 Word / Excel 文件，AI 自动提取字段和数据列。</p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl p-1 border border-slate-200 shadow-sm">
+            <textarea id="template-text" rows="9" class="w-full rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" placeholder="例如：尊敬的{{姓名}}，您荣获{{奖项}}，颁发日期{{日期}}。"></textarea>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="flex-1 cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 py-4 text-center hover:border-brand-400 hover:bg-brand-50 transition group">
+              <svg class="w-6 h-6 mx-auto text-slate-400 group-hover:text-brand-500 mb-1 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              <span class="text-sm text-slate-600 group-hover:text-brand-700 font-medium">上传 Word / Excel 文件</span>
+              <input id="template-file" type="file" accept=".docx,.xlsx,.xls" class="hidden" />
+            </label>
+            <button id="btn-detect" class="px-6 py-4 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold hover:from-accent-600 hover:to-accent-700 transition shadow-lg shadow-orange-200">开始识别</button>
+          </div>
+          <p id="file-name" class="text-xs text-slate-400 h-4"></p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-bold text-slate-700">识别到的字段</span>
+            <button id="btn-clear-fields" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition">清空</button>
+          </div>
+          <div id="fields-container" class="flex flex-wrap gap-2 min-h-[140px]">
+            <span class="text-sm text-slate-400">暂无字段，请输入文本或上传文件后点击识别。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data & Preview -->
+  <section id="demo" class="py-16 px-4 bg-white border-y border-slate-100">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-10 text-center md:text-left">
+        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
+          <span class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">03</span>
+          数据填充 & 文档预览
+        </h2>
+        <p class="text-slate-500 md:text-lg">编辑表格数据，点击预览查看替换效果，也可直接导出 Word 文档。</p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <label class="text-sm font-bold text-slate-700">数据表</label>
+            <button id="btn-add-row" class="text-sm px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium transition">+ 添加一行</button>
+          </div>
+          <div class="overflow-auto rounded-2xl border border-slate-200 shadow-sm">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr id="data-head"><th class="px-4 py-3 text-left font-semibold">字段</th></tr>
+              </thead>
+              <tbody id="data-body" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <label class="text-sm font-bold text-slate-700">生成预览</label>
+            <div class="flex gap-2">
+              <button id="btn-preview" class="px-4 py-2 rounded-xl bg-brand-100 text-brand-700 text-sm font-semibold hover:bg-brand-200 transition">预览第一行</button>
+              <button id="btn-download" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition shadow-md shadow-brand-200">导出 Word</button>
+            </div>
+          </div>
+          <div id="preview-card" class="preview-paper rounded-2xl border border-slate-200 p-8 min-h-[320px]">
+            <div class="text-center text-slate-400 py-24">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              点击“预览第一行”查看生成效果
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="py-16 px-4 bg-gradient-to-b from-slate-50 to-white">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-2xl md:text-3xl font-bold mb-3">覆盖多种真实场景</h2>
+        <p class="text-slate-500">企业、学校、公益组织都能快速上手</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3">🏆</div>
+          <h4 class="font-bold text-sm">优秀员工证书</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3">📩</div>
+          <h4 class="font-bold text-sm">会议邀请函</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3">🎫</div>
+          <h4 class="font-bold text-sm">活动胸牌</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-3">📢</div>
+          <h4 class="font-bold text-sm">通知公告</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3">💌</div>
+          <h4 class="font-bold text-sm">志愿者感谢信</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">🎓</div>
+          <h4 class="font-bold text-sm">学生奖状</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3">🤝</div>
+          <h4 class="font-bold text-sm">客户感谢信</h4>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
+          <div class="w-12 h-12 mx-auto rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3">📅</div>
+          <h4 class="font-bold text-sm">放假通知</h4>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 text-center text-slate-500 text-sm bg-slate-900 text-white">
+    <div class="max-w-2xl mx-auto px-4">
+      <p class="text-lg font-bold text-white mb-2">AI 批量文档生成器</p>
+      <p class="text-slate-400 mb-4">TRAE AI 创造力大赛参赛作品 · 学习工作 / 社会公益</p>
+      <p class="text-slate-500">本 Demo 为在线体验版，完整桌面版支持批量生成、ZIP 打包、邮件发送等功能。</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // --- State ---
+    let detectedFields = [];
+    let dataRows = [];
+    let generatedCopy = '';
+    let currentScene = 'honor';
+
+    // --- Scene Config ---
+    const scenes = [
+      { key: 'honor', label: '优秀员工证书', icon: '🏆', desc: '荣誉证书 / 奖状', color: 'amber' },
+      { key: 'invite', label: '会议邀请函', icon: '📩', desc: '活动 / 会议邀请', color: 'blue' },
+      { key: 'volunteer', label: '志愿者感谢信', icon: '💌', desc: '公益 / 志愿活动', color: 'pink' },
+      { key: 'notice', label: '活动通知', icon: '📢', desc: '内部 / 活动通知', color: 'green' },
+      { key: 'onboarding', label: '入职通知', icon: '🆕', desc: '新员工入职', color: 'indigo' },
+      { key: 'award', label: '获奖通知', icon: '🥇', desc: '比赛 / 评选结果', color: 'yellow' },
+      { key: 'client', label: '客户感谢信', icon: '🤝', desc: '合作 / 致谢', color: 'teal' },
+      { key: 'holiday', label: '放假通知', icon: '📅', desc: '节假日安排', color: 'rose' },
+      { key: 'badge', label: '参会胸牌', icon: '🎫', desc: '胸牌 / 工作证', color: 'purple' },
+      { key: 'donation', label: '捐赠证书', icon: '❤️', desc: '公益捐赠证明', color: 'red' },
+    ];
+
+    const templates = {
+      honor: `兹证明 {{name}} 同志在 {{event}} 评选中表现优异，成绩突出，荣获“{{event}}”称号。
+
+特发此证，以资鼓励。`,
+      invite: `尊敬的 {{name}}：
+
+诚挚邀请您参加由 {{issuer}} 主办的「{{event}}」。您的出席将是我们莫大的荣幸。
+
+期待与您相见！`,
+      volunteer: `亲爱的 {{name}}：
+
+感谢您在 {{event}} 中的无私奉献与辛勤付出。您的热情与行动，为活动增添了温暖与力量。
+
+谨代表 {{issuer}} 向您致以诚挚的谢意！`,
+      notice: `各位同事：
+
+由 {{issuer}} 组织的「{{event}}」即将举行，请大家准时参加并做好准备。
+
+特此通知。`,
+      onboarding: `尊敬的 {{name}}：
+
+恭喜您通过 {{issuer}} 的面试，正式成为我们公司的一员！您的入职岗位为「{{event}}」，请于 {{extra}} 携带相关资料办理入职手续。
+
+期待与您共同成长！`,
+      award: `尊敬的 {{name}}：
+
+恭喜您在 {{issuer}} 举办的「{{event}}」中表现优异，荣获 {{extra}}。这是对您的努力与才华的最佳肯定。
+
+特此通知，望再接再厉！`,
+      client: `尊敬的 {{name}}：
+
+衷心感谢贵司对 {{issuer}} 的信任与支持。在「{{event}}」项目中，双方团队的紧密协作让合作取得了丰硕成果。
+
+期待未来继续携手，共创佳绩！`,
+      holiday: `各位同事：
+
+根据 {{issuer}} 安排，「{{event}}」放假时间为 {{extra}}。请大家提前做好工作交接，注意出行安全，度过一个愉快的假期。
+
+特此通知。`,
+      badge: `姓名：{{name}}
+单位：{{issuer}}
+活动：{{event}}
+身份：{{extra}}
+
+请佩戴此胸牌参加活动，谢谢配合。`,
+      donation: `尊敬的 {{name}}：
+
+感谢您对 {{event}} 的爱心捐赠。您的善举将为 {{extra}} 带来切实帮助，公益因您而更有力量。
+
+特发此证，以表谢忱。`
+    };
+
+    const extraLabels = {
+      onboarding: '入职日期',
+      award: '奖项等级',
+      holiday: '放假时间',
+      badge: '参会身份',
+      donation: '受助对象'
+    };
+
+    // --- Render Scene Cards ---
+    function renderSceneCards() {
+      const container = document.getElementById('scenes');
+      container.innerHTML = scenes.map(s => `
+        <button class="scene-card text-left p-4 rounded-2xl border border-slate-200 bg-white ${s.key === currentScene ? 'active' : ''}" data-scene="${s.key}">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl">${s.icon}</span>
+            <span class="font-bold text-slate-800 text-sm">${s.label}</span>
+          </div>
+          <p class="text-xs text-slate-500">${s.desc}</p>
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.scene-card').forEach(card => {
+        card.addEventListener('click', () => {
+          currentScene = card.dataset.scene;
+          renderSceneCards();
+          updateExtraField();
+          setDefaultValues();
+        });
+      });
+    }
+
+    function updateExtraField() {
+      const wrapper = document.getElementById('extra-field');
+      const label = document.getElementById('extra-label');
+      const input = document.getElementById('extra');
+      if (extraLabels[currentScene]) {
+        wrapper.classList.remove('hidden');
+        label.textContent = extraLabels[currentScene];
+        input.value = defaultExtraValue(currentScene);
+      } else {
+        wrapper.classList.add('hidden');
+      }
+    }
+
+    function defaultExtraValue(scene) {
+      const map = {
+        onboarding: '2026 年 7 月 1 日',
+        award: '一等奖',
+        holiday: '2026 年 10 月 1 日至 10 月 7 日',
+        badge: '嘉宾',
+        donation: '山区儿童'
+      };
+      return map[scene] || '';
+    }
+
+    function setDefaultValues() {
+      const defaults = {
+        honor: { name: '张晓明', event: '2026 年度销售冠军', issuer: '字节跳动销售部' },
+        invite: { name: '张晓明', event: '2026 全球开发者大会', issuer: '字节跳动' },
+        volunteer: { name: '李雪婷', event: '2026 公益助学行动', issuer: '爱心志愿者协会' },
+        notice: { name: '各位同事', event: '2026 年度总结大会', issuer: '公司人力资源部' },
+        onboarding: { name: '王浩然', event: '前端开发工程师', issuer: '字节跳动' },
+        award: { name: '陈雨涵', event: '2026 创新设计大赛', issuer: '设计协会' },
+        client: { name: '腾讯科技', event: '2026 联合营销项目', issuer: '字节跳动市场部' },
+        holiday: { name: '各位同事', event: '国庆节', issuer: '公司行政部' },
+        badge: { name: '刘子轩', event: '2026 AI 技术峰会', issuer: '极客社区' },
+        donation: { name: '赵文静', event: '2026 暖冬助学计划', issuer: '公益基金会' }
+      };
+      const d = defaults[currentScene] || defaults.honor;
+      document.getElementById('name').value = d.name;
+      document.getElementById('event').value = d.event;
+      document.getElementById('issuer').value = d.issuer;
+      if (extraLabels[currentScene]) {
+        document.getElementById('extra').value = defaultExtraValue(currentScene);
+      }
+    }
+
+    // --- AI Copy Assistant ---
+    document.getElementById('btn-generate-copy').addEventListener('click', () => {
+      const name = document.getElementById('name').value.trim() || '【姓名】';
+      const event = document.getElementById('event').value.trim() || '【事件】';
+      const issuer = document.getElementById('issuer').value.trim() || '【单位】';
+      const extra = document.getElementById('extra').value.trim() || '【补充信息】';
+      const tpl = templates[currentScene] || templates.honor;
+      const raw = tpl.replace(/{{name}}/g, name).replace(/{{event}}/g, event).replace(/{{issuer}}/g, issuer).replace(/{{extra}}/g, extra);
+      const output = document.getElementById('copy-output');
+      const status = document.getElementById('copy-status');
+      const copyBtn = document.getElementById('btn-copy-result');
+      status.textContent = 'AI 正在生成...';
+      copyBtn.classList.add('hidden');
+      generatedCopy = raw;
+      let i = 0;
+      output.textContent = '';
+      const cursor = document.createElement('span');
+      cursor.className = 'typing-cursor';
+      output.appendChild(cursor);
+      const timer = setInterval(() => {
+        if (i >= raw.length) {
+          clearInterval(timer);
+          cursor.remove();
+          status.textContent = '生成完成';
+          copyBtn.classList.remove('hidden');
+          updateDataTable();
+          previewRow(0);
+          return;
+        }
+        output.insertBefore(document.createTextNode(raw[i]), cursor);
+        i++;
+      }, 14);
+    });
+
+    document.getElementById('btn-copy-result').addEventListener('click', () => {
+      if (!generatedCopy) return;
+      navigator.clipboard.writeText(generatedCopy).then(() => showToast('已复制到剪贴板'));
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // --- Field Detection ---
+    const defaultTemplate = `尊敬的{{姓名}}：
+
+恭喜您荣获“{{奖项}}”！
+颁奖单位：{{单位}}
+日期：{{日期}}
+
+{{正文}}`;
+    document.getElementById('template-text').value = defaultTemplate;
+
+    function cleanFieldName(name) {
+      return name.trim().replace(/^[\{\[\]\}]+|[\{\[\]\}]+$/g, '').trim();
+    }
+
+    function detectFields(text) {
+      const set = new Set();
+      const patterns = [
+        /\{\{([^}]+)\}\}/g,
+        /\{([^}]+)\}/g,
+        /\[([^\]]+)\]/g
+      ];
+      patterns.forEach(re => {
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          const cleaned = cleanFieldName(m[1]);
+          if (cleaned) set.add(cleaned);
+        }
+      });
+      const common = ['姓名','名称','奖项','日期','时间','地点','单位','部门','编号','邮箱','电话','地址','正文','内容','职位','身份','受助对象'];
+      common.forEach(word => {
+        const re = new RegExp(word, 'g');
+        if (re.test(text) && !Array.from(set).some(f => f.includes(word))) set.add(word);
+      });
+      return Array.from(set);
+    }
+
+    function renderFields() {
+      const container = document.getElementById('fields-container');
+      if (detectedFields.length === 0) {
+        container.innerHTML = '<span class="text-sm text-slate-400">暂无字段，请输入文本或上传文件后点击识别。</span>';
+        return;
+      }
+      container.innerHTML = detectedFields.map((f, idx) => `
+        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-50 text-brand-700 text-sm border border-brand-100 hover:bg-brand-100 transition">
+          ${f}
+          <button data-idx="${idx}" class="field-remove text-brand-400 hover:text-red-500 font-bold ml-1">×</button>
+        </span>
+      `).join('');
+      container.querySelectorAll('.field-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          detectedFields.splice(parseInt(e.target.dataset.idx), 1);
+          renderFields();
+          updateDataTable();
+        });
+      });
+      updateDataTable();
+    }
+
+    document.getElementById('btn-detect').addEventListener('click', async () => {
+      const fileInput = document.getElementById('template-file');
+      const textInput = document.getElementById('template-text').value;
+      if (fileInput.files.length) {
+        const file = fileInput.files[0];
+        const name = file.name.toLowerCase();
+        let text = '';
+        if (name.endsWith('.docx')) {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          text = result.value;
+        } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+          const data = await file.arrayBuffer();
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          if (json.length) {
+            const headers = json[0].filter(Boolean).map(String);
+            detectedFields = headers;
+            if (json[1]) {
+              const row = {};
+              headers.forEach((h, i) => row[h] = json[1][i] || '');
+              dataRows = [row];
+            }
+            renderFields();
+            showToast(`识别到 ${headers.length} 个字段`);
+            return;
+          }
+        }
+        detectedFields = detectFields(text + '\n' + textInput);
+      } else {
+        detectedFields = detectFields(textInput);
+      }
+      renderFields();
+      showToast(`识别到 ${detectedFields.length} 个字段`);
+    });
+
+    document.getElementById('btn-clear-fields').addEventListener('click', () => {
+      detectedFields = [];
+      renderFields();
+    });
+
+    document.getElementById('template-file').addEventListener('change', (e) => {
+      document.getElementById('file-name').textContent = e.target.files[0]?.name || '';
+    });
+
+    // --- Data Table ---
+    function updateDataTable() {
+      const thead = document.getElementById('data-head');
+      const tbody = document.getElementById('data-body');
+      const fields = detectedFields.length ? detectedFields : ['姓名','奖项','单位','日期'];
+      thead.innerHTML = fields.map(f => `<th class="px-4 py-3 text-left font-semibold min-w-[110px]">${f}</th>`).join('');
+
+      if (dataRows.length === 0) {
+        dataRows = [
+          fields.reduce((acc, f) => { acc[f] = sampleValue(f); return acc; }, {}),
+          fields.reduce((acc, f) => { acc[f] = sampleValue(f, 2); return acc; }, {})
+        ];
+      } else {
+        dataRows.forEach(row => {
+          fields.forEach(f => { if (!(f in row)) row[f] = sampleValue(f); });
+        });
+      }
+
+      tbody.innerHTML = dataRows.map((row, rIdx) => `
+        <tr>
+          ${fields.map(f => `<td class="px-4 py-2"><input data-row="${rIdx}" data-field="${f}" value="${escapeHtml(row[f])}" class="w-full bg-transparent outline-none py-1" /></td>`).join('')}
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          dataRows[e.target.dataset.row][e.target.dataset.field] = e.target.value;
+        });
+      });
+    }
+
+    function sampleValue(field, idx = 1) {
+      const map = {
+        '姓名': ['张晓明', '李雪婷'][idx - 1] || '王浩然',
+        '名称': ['张晓明', '李雪婷'][idx - 1] || '王浩然',
+        '奖项': ['2026 年度销售冠军', '最佳新人奖'][idx - 1] || '优秀员工',
+        '事件': ['2026 年度销售冠军', '最佳新人奖'][idx - 1] || '优秀员工',
+        '单位': ['字节跳动销售部', '字节跳动市场部'][idx - 1] || '字节跳动',
+        '部门': ['销售部', '市场部'][idx - 1] || '技术部',
+        '日期': ['2026 年 6 月 28 日', '2026 年 6 月 29 日'][idx - 1] || '2026 年 6 月 30 日',
+        '时间': ['2026 年 6 月 28 日', '2026 年 6 月 29 日'][idx - 1] || '2026 年 6 月 30 日',
+        '地点': ['北京', '上海'][idx - 1] || '深圳',
+        '编号': ['NO.2026001', 'NO.2026002'][idx - 1] || 'NO.2026003',
+        '邮箱': ['zhang@example.com', 'li@example.com'][idx - 1] || 'wang@example.com',
+        '电话': ['13800000001', '13800000002'][idx - 1] || '13800000003',
+        '地址': ['北京市海淀区', '上海市浦东新区'][idx - 1] || '深圳市南山区',
+        '正文': generatedCopy || '（请先生成 AI 文案）',
+        '内容': generatedCopy || '（请先生成 AI 文案）',
+        '职位': ['前端开发工程师', '产品经理'][idx - 1] || 'UI 设计师',
+        '身份': ['嘉宾', '观众'][idx - 1] || '工作人员',
+        '受助对象': ['山区儿童', '困境老人'][idx - 1] || '残障群体'
+      };
+      return map[field] || `示例${field}${idx}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.getElementById('btn-add-row').addEventListener('click', () => {
+      const fields = detectedFields.length ? detectedFields : ['姓名','奖项','单位','日期'];
+      dataRows.push(fields.reduce((acc, f) => { acc[f] = sampleValue(f, dataRows.length + 1); return acc; }, {}));
+      updateDataTable();
+    });
+
+    // --- Preview & Export ---
+    function fillTemplate(row) {
+      let tpl = document.getElementById('template-text').value || defaultTemplate;
+      Object.keys(row).forEach(key => {
+        const re = new RegExp('\\{\\{' + escapeRegExp(key) + '\\}\\}', 'g');
+        tpl = tpl.replace(re, row[key]);
+      });
+      return tpl.replace(/\n/g, '<br>');
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function previewRow(index) {
+      if (!dataRows.length) return;
+      const row = dataRows[Math.min(index, dataRows.length - 1)];
+      const isHonor = currentScene === 'honor' || currentScene === 'award' || currentScene === 'donation';
+      const html = `
+        <div class="${isHonor ? 'preview-honor' : 'preview-paper'} rounded-xl p-6 h-full min-h-[280px]">
+          <div class="border-b ${isHonor ? 'border-amber-200' : 'border-slate-100'} pb-3 mb-4">
+            <h3 class="text-lg font-bold ${isHonor ? 'text-amber-800' : 'text-slate-900'}">文档预览</h3>
+            <p class="text-xs ${isHonor ? 'text-amber-600' : 'text-slate-400'}">使用第 ${index + 1} 行数据</p>
+          </div>
+          <div class="${isHonor ? 'text-amber-900' : 'text-slate-800'} leading-loose text-base">${fillTemplate(row)}</div>
+        </div>
+      `;
+      document.getElementById('preview-card').innerHTML = html;
+    }
+
+    document.getElementById('btn-preview').addEventListener('click', () => previewRow(0));
+
+    document.getElementById('btn-download').addEventListener('click', () => {
+      if (!dataRows.length) return alert('请先添加数据');
+      const row = dataRows[0];
+      let text = document.getElementById('template-text').value || defaultTemplate;
+      Object.keys(row).forEach(key => {
+        const re = new RegExp('\\{\\{' + escapeRegExp(key) + '\\}\\}', 'g');
+        text = text.replace(re, row[key]);
+      });
+      try {
+        const { Document, Packer, Paragraph, TextRun } = window.docx;
+        const doc = new Document({
+          sections: [{
+            properties: {},
+            children: text.split('\n').filter(l => l.trim()).map(line =>
+              new Paragraph({ children: [new TextRun({ text: line, size: 24 })] })
+            )
+          }]
+        });
+        Packer.toBlob(doc).then(blob => {
+          saveAs(blob, 'AI批量文档生成示例.docx');
+        }).catch(err => {
+          console.error(err);
+          downloadTxt(text);
+        });
+      } catch (e) {
+        console.error(e);
+        downloadTxt(text);
+      }
+    });
+
+    function downloadTxt(text) {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, 'AI批量文档生成示例.txt');
+    }
+
+    // Init
+    renderSceneCards();
+    updateExtraField();
+    updateDataTable();
+  </script>
+</body>
+</html>
