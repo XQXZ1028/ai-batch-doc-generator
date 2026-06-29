@@ -394,6 +394,99 @@
       background: rgba(255,255,255,0.03);
     }
 
+    /* Template visual editor */
+    .template-editor-wrap { position: relative; }
+    .template-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .mode-btn {
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { background: rgba(255,255,255,0.08); color: var(--ink); }
+    .mode-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .template-visual {
+      width: 100%;
+      min-height: 260px;
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.03) 100%);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.85;
+      outline: none;
+      transition: all 0.2s;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .template-visual:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(14,116,144,0.12); background: rgba(255,255,255,0.07); }
+    .template-visual .field-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      margin: 0 2px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.22) 0%, rgba(245,158,11,0.1) 100%);
+      color: #fcd34d;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid rgba(245,158,11,0.35);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.12);
+      cursor: pointer;
+      user-select: none;
+      vertical-align: middle;
+    }
+    .template-visual .field-chip:hover { background: rgba(245,158,11,0.3); }
+    .template-visual .field-chip .chip-remove {
+      color: #fbbf24;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.7;
+    }
+    .template-visual .field-chip .chip-remove:hover { opacity: 1; color: #f87171; }
+    .field-marker-popup {
+      position: absolute;
+      z-index: 50;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 180px;
+    }
+    .field-marker-popup.hidden { display: none; }
+    .field-marker-popup input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: var(--ink);
+      font-size: 14px;
+      outline: none;
+    }
+    .field-marker-popup input:focus { border-color: var(--primary); }
+    .marker-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .template-source.hidden { display: none; }
+
     /* Tags */
     .tag {
       display: inline-flex;
@@ -958,14 +1051,35 @@
 
       <!-- Step 1: Template -->
       <div class="card p-6 md:p-10 mb-10 reveal">
-        <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-400 ml-2 hidden sm:inline">输入带占位符的模板，或上传 Word / Excel 自动识别</span></div>
+        <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-400 ml-2 hidden sm:inline">在可视化编辑器中选中文字标记字段，或输入 {{字段名}} 占位符</span></div>
         <div class="grid lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2">
-            <textarea id="template-text" class="input textarea" placeholder="例如：&#10;尊敬的{{姓名}}：&#10;&#10;恭喜您荣获“{{奖项}}”！&#10;颁奖单位：{{单位}}&#10;日期：{{日期}}&#10;&#10;{{正文}}"></textarea>
+            <div class="template-editor-wrap">
+              <div class="template-toolbar">
+                <div class="flex items-center gap-2">
+                  <button id="btn-mode-visual" class="mode-btn active">可视化编辑</button>
+                  <button id="btn-mode-source" class="mode-btn">源码</button>
+                </div>
+                <span class="text-xs text-slate-500">选中文字后点击「标记为字段」即可定位替换位置</span>
+              </div>
+              <div id="template-visual" class="template-visual" contenteditable="true" spellcheck="false"></div>
+              <textarea id="template-text" class="input textarea template-source hidden" placeholder="例如：&#10;尊敬的{{姓名}}：&#10;&#10;恭喜您荣获“{{奖项}}”！&#10;颁奖单位：{{单位}}&#10;日期：{{日期}}&#10;&#10;{{正文}}"></textarea>
+              <div id="field-marker-popup" class="field-marker-popup hidden">
+                <input id="marker-input" type="text" placeholder="字段名，如：姓名" />
+                <div class="marker-actions">
+                  <button id="btn-marker-confirm" class="btn-primary text-xs py-1.5 px-3">确认</button>
+                  <button id="btn-marker-cancel" class="btn-secondary text-xs py-1.5 px-3">取消</button>
+                </div>
+              </div>
+            </div>
             <div class="flex flex-wrap items-center gap-3 mt-5">
               <button id="btn-load-example" class="btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 加载示例
+              </button>
+              <button id="btn-mark-field" class="btn-accent" title="在可视化编辑器中选中文字后点击此处标记">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                标记为字段
               </button>
               <label class="btn-secondary cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
@@ -1458,6 +1572,176 @@
       document.getElementById('file-name').textContent = e.target.files[0]?.name || '';
     });
 
+    // --- Visual Template Editor ---
+    const templateText = document.getElementById('template-text');
+    const templateVisual = document.getElementById('template-visual');
+    const markerPopup = document.getElementById('field-marker-popup');
+    const markerInput = document.getElementById('marker-input');
+    const btnModeVisual = document.getElementById('btn-mode-visual');
+    const btnModeSource = document.getElementById('btn-mode-source');
+    let savedRange = null;
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderVisual() {
+      const text = templateText.value;
+      // Convert {{field}} into chips while preserving line breaks and escaping HTML
+      let html = escapeHtml(text)
+        .replace(/\{\{([^}]+)\}\}/g, '<span class="field-chip" data-field="$1">{{$1}}<span class="chip-remove" data-field="$1">×</span></span>')
+        .replace(/\n/g, '<br>');
+      templateVisual.innerHTML = html;
+    }
+
+    function readVisual() {
+      function nodeText(node) {
+        if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+        if (node.classList.contains('field-chip')) {
+          return '{{' + node.getAttribute('data-field') + '}}';
+        }
+        const tag = node.tagName.toLowerCase();
+        const isBlock = tag === 'div' || tag === 'p' || tag === 'br';
+        let text = '';
+        node.childNodes.forEach(child => text += nodeText(child));
+        if (isBlock) text += '\n';
+        return text;
+      }
+      let text = nodeText(templateVisual);
+      // Collapse consecutive newlines and trim trailing
+      text = text.replace(/\n{3,}/g, '\n\n').replace(/\n+$/g, '');
+      templateText.value = text;
+    }
+
+    function setMode(mode) {
+      if (mode === 'source') {
+        readVisual();
+        templateVisual.classList.add('hidden');
+        templateText.classList.remove('hidden');
+        btnModeSource.classList.add('active');
+        btnModeVisual.classList.remove('active');
+      } else {
+        renderVisual();
+        templateText.classList.add('hidden');
+        templateVisual.classList.remove('hidden');
+        btnModeVisual.classList.add('active');
+        btnModeSource.classList.remove('active');
+      }
+    }
+
+    btnModeVisual.addEventListener('click', () => setMode('visual'));
+    btnModeSource.addEventListener('click', () => setMode('source'));
+
+    templateVisual.addEventListener('input', () => {
+      // Sync back on the fly, but keep field chips intact
+      readVisual();
+    });
+
+    templateVisual.addEventListener('click', (e) => {
+      const remove = e.target.closest('.chip-remove');
+      if (remove) {
+        e.preventDefault();
+        const chip = remove.closest('.field-chip');
+        const name = chip.getAttribute('data-field');
+        const text = document.createTextNode(chip.innerText.replace('×', '').trim());
+        chip.parentNode.replaceChild(text, chip);
+        readVisual();
+        detectAndRender();
+        return;
+      }
+      if (e.target.classList.contains('field-chip')) {
+        const name = e.target.getAttribute('data-field');
+        const newName = prompt('修改字段名：', name);
+        if (newName && newName.trim()) {
+          e.target.setAttribute('data-field', newName.trim());
+          e.target.childNodes[0].textContent = '{{' + newName.trim() + '}}';
+          readVisual();
+          detectAndRender();
+        }
+      }
+    });
+
+    function detectAndRender() {
+      detectedFields = detectFields(templateText.value);
+      renderFields();
+    }
+
+    function getSelectionRange() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return null;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return null;
+      if (!templateVisual.contains(range.commonAncestorContainer)) return null;
+      return range;
+    }
+
+    function showMarkerPopup() {
+      const range = getSelectionRange();
+      if (!range) return;
+      savedRange = range.cloneRange();
+      const rect = range.getBoundingClientRect();
+      const wrapRect = templateVisual.getBoundingClientRect();
+      markerPopup.style.left = (rect.left - wrapRect.left + templateVisual.scrollLeft) + 'px';
+      markerPopup.style.top = (rect.bottom - wrapRect.top + templateVisual.scrollTop + 8) + 'px';
+      markerPopup.classList.remove('hidden');
+      markerInput.value = '';
+      markerInput.focus();
+    }
+
+    function hideMarkerPopup() {
+      markerPopup.classList.add('hidden');
+      savedRange = null;
+    }
+
+    function applyMarker() {
+      const name = markerInput.value.trim();
+      if (!name || !savedRange) return;
+      const chip = document.createElement('span');
+      chip.className = 'field-chip';
+      chip.setAttribute('data-field', name);
+      chip.innerHTML = '{{' + escapeHtml(name) + '}}<span class="chip-remove" data-field="' + escapeHtml(name) + '">×</span>';
+      savedRange.deleteContents();
+      savedRange.insertNode(chip);
+      // Move cursor after chip
+      const newRange = document.createRange();
+      newRange.setStartAfter(chip);
+      newRange.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      hideMarkerPopup();
+      readVisual();
+      detectAndRender();
+      showToast('已标记字段：' + name);
+    }
+
+    document.getElementById('btn-mark-field').addEventListener('click', showMarkerPopup);
+    document.getElementById('btn-marker-confirm').addEventListener('click', applyMarker);
+    document.getElementById('btn-marker-cancel').addEventListener('click', hideMarkerPopup);
+    markerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyMarker();
+      if (e.key === 'Escape') hideMarkerPopup();
+    });
+
+    // When "Detect Fields" is clicked, make sure source is up to date
+    document.getElementById('btn-detect').addEventListener('click', () => {
+      if (!templateText.classList.contains('hidden')) {
+        // already source mode
+      } else {
+        readVisual();
+      }
+    });
+
+    // Override load example to also render visual
+    const originalLoadExample = document.getElementById('btn-load-example').onclick;
+    document.getElementById('btn-load-example').addEventListener('click', () => {
+      setTimeout(() => {
+        renderVisual();
+        detectAndRender();
+      }, 0);
+    });
+
     // --- Data Table ---
     function updateDataTable() {
       const thead = document.getElementById('data-head');
@@ -1511,10 +1795,6 @@
         '受助对象': ['山区儿童', '困境老人'][idx - 1] || '残障群体'
       };
       return map[field] || `示例${field}${idx}`;
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     document.getElementById('btn-add-row').addEventListener('click', () => {
@@ -1612,6 +1892,7 @@
     updateExtraField();
     updateDataTable();
     renderFields();
+    renderVisual();
     previewRow(0);
   </script>
 </body>
