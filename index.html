@@ -4,185 +4,704 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>批量文档生成器 - 在线体验 Demo</title>
-  <meta name="description" content="批量文档生成器在线体验：上传模板 + 粘贴 Excel，一键生成千份证书、邀请函、通知等文档。" />
+  <meta name="description" content="批量文档生成器在线体验：一张模板 + 一份表格，一键生成千份证书、邀请函、通知等文档。" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Noto Sans SC', system-ui, sans-serif; background: #f8fafc; }
-    .workspace-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .btn-primary { background: #2563eb; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.15s; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-secondary { background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.15s; }
-    .btn-secondary:hover { background: #f1f5f9; border-color: #94a3b8; }
-    .input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; outline: none; transition: border-color 0.15s; background: #fff; }
-    .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
-    .textarea { min-height: 220px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; line-height: 1.7; }
-    table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    table.data-table th { background: #f8fafc; text-align: left; padding: 10px 12px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-    table.data-table td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; }
-    table.data-table input { width: 100%; border: none; background: transparent; padding: 6px 0; outline: none; font-size: 14px; }
-    table.data-table input:focus { background: #eff6ff; }
-    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 13px; font-weight: 500; border: 1px solid #dbeafe; }
-    .tag button { color: #93c5fd; font-size: 16px; line-height: 1; }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@400;600;700;900&display=swap');
+
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --ink: #0f172a;
+      --ink-2: #334155;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+      --primary-50: #eff6ff;
+      --accent: #f59e0b;
+      --accent-600: #d97706;
+      --success: #10b981;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink-2);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .font-display { font-family: 'Noto Serif SC', Georgia, serif; }
+
+    /* Hero background */
+    .hero-bg {
+      background:
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.22) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(245, 158, 11, 0.18) 0%, transparent 40%),
+        linear-gradient(135deg, #0b1120 0%, #0f172a 45%, #172554 100%);
+      position: relative;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(circle at center, black 0%, transparent 75%);
+      -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 75%);
+    }
+
+    /* Floating cards */
+    .float-card {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .float-card:nth-child(1) { width: 180px; height: 120px; top: 18%; right: 12%; animation-delay: 0s; }
+    .float-card:nth-child(2) { width: 140px; height: 90px; top: 45%; right: 28%; animation-delay: -2s; }
+    .float-card:nth-child(3) { width: 160px; height: 100px; top: 62%; right: 8%; animation-delay: -4s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-18px) rotate(1.5deg); }
+    }
+
+    /* Glow */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: var(--ink-2);
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover { border-color: #94a3b8; background: #f8fafc; transform: translateY(-1px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover { background: rgba(255,255,255,0.14); }
+
+    .btn-accent {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-600) 100%);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45); }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    /* Inputs */
+    .input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      outline: none;
+      transition: all 0.15s;
+      background: #fff;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.08); }
+
+    .textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      background: #fafbfc;
+    }
+
+    /* Tags */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--primary-50);
+      color: var(--primary-600);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #dbeafe;
+      animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .tag button { color: #93c5fd; font-size: 16px; line-height: 1; transition: color 0.15s; }
     .tag button:hover { color: #ef4444; }
-    .preview-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; min-height: 280px; padding: 28px; line-height: 1.8; color: #1e293b; }
-    .preview-box h4 { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-    .scene-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 13px; cursor: pointer; transition: all 0.15s; }
-    .scene-chip:hover, .scene-chip.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
-    .section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .section-title .num { width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 100; }
+
+    /* Data table */
+    table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+    table.data-table th {
+      background: #f8fafc;
+      text-align: left;
+      padding: 12px 14px;
+      font-weight: 600;
+      color: var(--ink-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    table.data-table td { padding: 8px 14px; border-bottom: 1px solid #f1f5f9; }
+    table.data-table tr:last-child td { border-bottom: none; }
+    table.data-table input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 8px 0;
+      outline: none;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    table.data-table input:focus { background: #eff6ff; border-radius: 6px; padding-left: 8px; padding-right: 8px; }
+
+    /* Preview paper */
+    .preview-paper {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-sm);
+      min-height: 320px;
+      padding: 36px;
+      line-height: 1.9;
+      color: var(--ink);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .preview-paper::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+
+    .preview-paper h4 { font-size: 20px; font-weight: 700; margin-bottom: 18px; color: var(--ink); border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+
+    /* Scene chips */
+    .scene-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .scene-chip:hover, .scene-chip.active { border-color: var(--primary); background: var(--primary-50); color: var(--primary-600); }
+
+    /* Section titles */
+    .section-title { font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .section-title .num { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    }
+
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .optional-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 500; margin-left: 8px; }
+
+    .optional-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
     [hidden] { display: none !important; }
+
+    /* Step connector */
+    .step-connector {
+      position: absolute;
+      top: 28px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      opacity: 0.3;
+      transform: translateX(50%);
+    }
+
+    @media (max-width: 1024px) { .step-connector { display: none; } }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Stats */
+    .stat-number { font-family: 'Noto Serif SC', Georgia, serif; font-size: 2.5rem; font-weight: 700; color: var(--primary); line-height: 1; }
+
+    /* Pulse dot */
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Nav glass */
+    .nav-glass {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* AI panel */
+    .ai-panel-toggle {
+      width: 100%;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #f8fafc, #fff);
+      border: none;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    /* Scene icon cards */
+    .scene-card {
+      padding: 20px;
+      border-radius: var(--radius-sm);
+      background: #fff;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .scene-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .scene-card .icon { font-size: 28px; margin-bottom: 10px; }
+    .scene-card h4 { font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .scene-card p { font-size: 13px; color: var(--muted); }
   </style>
 </head>
-<body class="text-slate-700">
+<body>
 
   <!-- Nav -->
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-2.5 font-bold text-slate-900">
-        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  <nav class="nav-glass fixed top-0 left-0 right-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-2.5 font-bold text-slate-900 text-lg">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
         批量文档生成器
+      </a>
+      <div class="flex items-center gap-4">
+        <a href="#workspace" class="hidden sm:inline-flex btn-primary text-sm py-2.5 px-5">立即体验</a>
       </div>
-      <div class="text-xs text-slate-500 hidden sm:block">TRAE AI 创造力大赛 · 学习工作 / 社会公益</div>
     </div>
   </nav>
 
   <!-- Hero -->
-  <header class="bg-white border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 py-10 md:py-14">
+  <header class="hero-bg text-white pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden relative">
+    <div class="hero-grid"></div>
+    <div class="glow w-96 h-96 bg-blue-500 top-[-10%] left-[-10%]"></div>
+    <div class="glow w-80 h-80 bg-amber-500 bottom-[-10%] right-[-5%]"></div>
+
+    <!-- Floating docs -->
+    <div class="hidden lg:block">
+      <div class="float-card p-4">
+        <div class="text-xs text-blue-200 mb-2">证书 #001</div>
+        <div class="h-2 bg-white/20 rounded mb-2 w-3/4"></div>
+        <div class="h-2 bg-white/10 rounded w-1/2"></div>
+      </div>
+      <div class="float-card p-4">
+        <div class="text-xs text-amber-200 mb-2">邀请函 #042</div>
+        <div class="h-2 bg-white/20 rounded mb-2 w-2/3"></div>
+        <div class="h-2 bg-white/10 rounded w-4/5"></div>
+      </div>
+      <div class="float-card p-4">
+        <div class="text-xs text-emerald-200 mb-2">通知 #128</div>
+        <div class="h-2 bg-white/20 rounded mb-2 w-3/4"></div>
+        <div class="h-2 bg-white/10 rounded w-1/2"></div>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
       <div class="max-w-3xl">
-        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">一张模板 + 一份表格，批量生成专业文档</h1>
-        <p class="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">
-          在模板中标记替换位置，粘贴 Excel 数据，每一行自动生成一份 Word 文档。无需代码、无需联网，适合证书、邀请函、通知、胸牌等高频批量场景。
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 text-sm text-blue-100 mb-6 backdrop-blur-sm">
+          <span class="pulse-dot"></span>
+          TRAE AI 创造力大赛 · 学习工作 / 社会公益
+        </div>
+        <h1 class="font-display text-4xl md:text-6xl font-bold leading-tight mb-6">
+          一张模板 + 一份表格<br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-white to-amber-300">批量生成千份专业文档</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-2xl">
+          在 Word 模板中标记替换位置，粘贴 Excel 数据，每一行自动生成一份文档。无需代码、无需联网，证书、邀请函、通知、胸牌一键搞定。
         </p>
-        <div class="flex flex-wrap items-center gap-3">
-          <a href="#workspace" class="btn-primary inline-flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div class="flex flex-wrap items-center gap-4">
+          <a href="#workspace" class="btn-primary text-base">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             开始制作
           </a>
-          <span class="text-sm text-slate-500">30 秒上手，无需注册</span>
+          <a href="#how-it-works" class="btn-ghost text-base">
+            了解原理
+          </a>
         </div>
       </div>
     </div>
   </header>
 
+  <!-- Stats -->
+  <section class="relative z-20 -mt-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="card grid grid-cols-2 md:grid-cols-4 gap-6 p-6 md:p-8">
+        <div class="text-center">
+          <div class="stat-number">10+</div>
+          <div class="text-sm text-slate-500 mt-1">适用场景</div>
+        </div>
+        <div class="text-center">
+          <div class="stat-number">1000+</div>
+          <div class="text-sm text-slate-500 mt-1">单次批量生成</div>
+        </div>
+        <div class="text-center">
+          <div class="stat-number">3</div>
+          <div class="text-sm text-slate-500 mt-1">步完成</div>
+        </div>
+        <div class="text-center">
+          <div class="stat-number">0</div>
+          <div class="text-sm text-slate-500 mt-1">代码基础要求</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="py-20 md:py-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4">极简工作流</span>
+        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">三步，从模板到成批文档</h2>
+        <p class="text-slate-500 text-lg">告别重复排版，把模板和数据交给工具，专注内容本身。</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 relative">
+        <!-- Connector lines -->
+        <div class="hidden md:block step-connector" style="left: 16.66%;"></div>
+        <div class="hidden md:block step-connector" style="left: 50%;"></div>
+
+        <div class="card card-hover p-8 text-center reveal">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-2xl font-bold mb-5 shadow-lg shadow-blue-200">1</div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">准备模板</h3>
+          <p class="text-slate-500">输入带占位符的模板，或上传 Word / Excel 自动识别字段位置。</p>
+        </div>
+        <div class="card card-hover p-8 text-center reveal" style="transition-delay: 100ms;">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-2xl font-bold mb-5 shadow-lg shadow-indigo-200">2</div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">填入数据</h3>
+          <p class="text-slate-500">粘贴表格数据，每一行对应一份独立文档，实时在线编辑。</p>
+        </div>
+        <div class="card card-hover p-8 text-center reveal" style="transition-delay: 200ms;">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center text-2xl font-bold mb-5 shadow-lg shadow-amber-200">3</div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">批量导出</h3>
+          <p class="text-slate-500">一键导出 Word 文档，完整桌面版更支持 ZIP 打包与邮件发送。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Core Workspace -->
-  <main id="workspace" class="max-w-7xl mx-auto px-4 py-8">
+  <section id="workspace" class="pb-20 md:pb-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto mb-12 reveal">
+        <span class="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold mb-4">在线体验</span>
+        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">现在就开始制作</h2>
+        <p class="text-slate-500 text-lg">点击下方「加载示例」即可在 30 秒内看到完整效果。</p>
+      </div>
 
-    <!-- Step 1: Template -->
-    <section class="workspace-card p-5 mb-6">
-      <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-500">输入带占位符的模板，或上传 Word / Excel 自动识别</span></div>
-      <div class="grid lg:grid-cols-3 gap-5">
-        <div class="lg:col-span-2">
-          <textarea id="template-text" class="input textarea" placeholder="例如：&#10;尊敬的{{姓名}}：&#10;&#10;恭喜您荣获“{{奖项}}”！&#10;颁奖单位：{{单位}}&#10;日期：{{日期}}&#10;&#10;{{正文}}"></textarea>
-          <div class="flex flex-wrap items-center gap-3 mt-3">
-            <button id="btn-load-example" class="btn-primary inline-flex items-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-              加载示例
-            </button>
-            <label class="btn-secondary inline-flex items-center gap-2 cursor-pointer">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-              上传 Word / Excel
-              <input id="template-file" type="file" accept=".docx,.xlsx,.xls" class="hidden" />
-            </label>
-            <button id="btn-detect" class="btn-primary">识别字段</button>
-            <button id="btn-clear-fields" class="btn-secondary text-red-600 hover:text-red-700 hover:bg-red-50">清空字段</button>
-            <span id="file-name" class="text-xs text-slate-400"></span>
-          </div>
-        </div>
-        <div>
-          <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 h-full">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-semibold text-slate-700">识别到的字段</span>
-              <span id="field-count" class="text-xs text-slate-400">0 个</span>
-            </div>
-            <div id="fields-container" class="flex flex-wrap gap-2 min-h-[120px]">
-              <span class="text-sm text-slate-400">在左侧输入 {{姓名}} 等占位符，点击「识别字段」即可看到结果。</span>
+      <!-- Step 1: Template -->
+      <div class="card p-6 md:p-8 mb-8 reveal">
+        <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-400 ml-2">输入带占位符的模板，或上传 Word / Excel 自动识别</span></div>
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2">
+            <textarea id="template-text" class="input textarea" placeholder="例如：&#10;尊敬的{{姓名}}：&#10;&#10;恭喜您荣获“{{奖项}}”！&#10;颁奖单位：{{单位}}&#10;日期：{{日期}}&#10;&#10;{{正文}}"></textarea>
+            <div class="flex flex-wrap items-center gap-3 mt-4">
+              <button id="btn-load-example" class="btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                加载示例
+              </button>
+              <label class="btn-secondary cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                上传 Word / Excel
+                <input id="template-file" type="file" accept=".docx,.xlsx,.xls" class="hidden" />
+              </label>
+              <button id="btn-detect" class="btn-secondary">识别字段</button>
+              <button id="btn-clear-fields" class="btn-secondary text-red-600 hover:text-red-700 hover:bg-red-50">清空字段</button>
+              <span id="file-name" class="text-xs text-slate-400"></span>
             </div>
           </div>
+          <div>
+            <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 h-full">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold text-slate-700">识别到的字段</span>
+                <span id="field-count" class="text-xs font-semibold text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-200">0 个</span>
+              </div>
+              <div id="fields-container" class="flex flex-wrap gap-2 min-h-[120px]">
+                <span class="text-sm text-slate-400">在模板中使用 {{字段名}} 标记替换位置，点击「识别字段」即可看到结果。</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- Step 2 & 3: Data + Preview -->
-    <section class="workspace-card p-5 mb-6">
-      <div class="grid lg:grid-cols-2 gap-6">
-        <!-- Data -->
-        <div>
-          <div class="section-title"><span class="num">2</span> 填入数据 <span class="text-sm font-normal text-slate-500">每一行对应一份文档</span></div>
-          <div class="overflow-auto rounded-lg border border-slate-200 mb-3" style="max-height: 320px;">
-            <table class="data-table">
-              <thead><tr id="data-head"><th>字段</th></tr></thead>
-              <tbody id="data-body" class="bg-white"></tbody>
-            </table>
+      <!-- Step 2 & 3: Data + Preview -->
+      <div class="card p-6 md:p-8 mb-8 reveal">
+        <div class="grid lg:grid-cols-2 gap-8">
+          <!-- Data -->
+          <div>
+            <div class="section-title"><span class="num">2</span> 填入数据 <span class="text-sm font-normal text-slate-400 ml-2">每一行对应一份文档</span></div>
+            <div class="overflow-auto rounded-xl border border-slate-200 mb-4 bg-white" style="max-height: 340px;">
+              <table class="data-table">
+                <thead><tr id="data-head"><th>字段</th></tr></thead>
+                <tbody id="data-body"></tbody>
+              </table>
+            </div>
+            <button id="btn-add-row" class="btn-secondary text-sm">+ 添加一行</button>
           </div>
-          <button id="btn-add-row" class="btn-secondary text-sm">+ 添加一行</button>
-        </div>
-        <!-- Preview -->
-        <div>
-          <div class="section-title"><span class="num">3</span> 预览 & 导出</div>
-          <div id="preview-card" class="preview-box mb-3">
-            <h4>文档预览</h4>
-            <div class="text-slate-400 text-sm py-8 text-center">填写模板和数据后，点击「预览」查看生成效果</div>
-          </div>
-          <div class="flex gap-3">
-            <button id="btn-preview" class="btn-secondary flex-1">预览第一行</button>
-            <button id="btn-download" class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              导出 Word
-            </button>
+          <!-- Preview -->
+          <div>
+            <div class="section-title"><span class="num">3</span> 预览 & 导出</div>
+            <div id="preview-card" class="preview-paper mb-4">
+              <h4>文档预览</h4>
+              <div class="text-slate-400 text-sm py-10 text-center">填写模板和数据后，点击「预览」查看生成效果</div>
+            </div>
+            <div class="flex gap-3">
+              <button id="btn-preview" class="btn-secondary flex-1">预览第一行</button>
+              <button id="btn-download" class="btn-primary flex-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                导出 Word
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Optional AI Copy -->
-    <section id="ai-copy" class="workspace-card mb-6 border-l-4 border-l-slate-300 overflow-hidden">
-      <button id="ai-toggle" class="w-full p-5 flex items-center justify-between text-left bg-slate-50/50 hover:bg-slate-50 transition-colors">
-        <div class="section-title !mb-0">
-          AI 文案助手 <span class="optional-badge">可选</span>
-          <span class="text-sm font-normal text-slate-500 font-normal">不会写正文？选择场景，一键生成正式文案</span>
-        </div>
-        <svg id="ai-chevron" class="w-5 h-5 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
-      </button>
-      <div id="ai-panel" class="p-5 pt-0" hidden>
-        <div id="scenes" class="flex flex-wrap gap-2 mb-4"></div>
-      <div class="grid md:grid-cols-3 gap-4 mb-4">
-        <input id="name" type="text" value="张晓明" class="input" placeholder="收件人 / 获奖者姓名" />
-        <input id="event" type="text" value="2026 年度销售冠军" class="input" placeholder="事件 / 奖项 / 活动名称" />
-        <input id="issuer" type="text" value="字节跳动销售部" class="input" placeholder="颁奖单位 / 主办方" />
+  <!-- Scenes -->
+  <section class="py-20 bg-white border-y border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto mb-14 reveal">
+        <span class="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold mb-4">广泛适用</span>
+        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">这些场景都能批量搞定</h2>
+        <p class="text-slate-500 text-lg">从企业内部到公益活动，从个人学习到大型会议，一个工具覆盖多种文书需求。</p>
       </div>
-      <div id="extra-field" class="mb-4" hidden>
-        <label id="extra-label" class="block text-sm font-medium text-slate-700 mb-1.5"></label>
-        <input id="extra" type="text" value="" class="input" />
+
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 reveal">
+        <div class="scene-card text-center"><div class="icon">🏆</div><h4>荣誉证书</h4><p>优秀员工 / 奖状</p></div>
+        <div class="scene-card text-center"><div class="icon">📩</div><h4>邀请函</h4><p>会议 / 活动邀请</p></div>
+        <div class="scene-card text-center"><div class="icon">📢</div><h4>通知公告</h4><p>内部 / 活动通知</p></div>
+        <div class="scene-card text-center"><div class="icon">🎫</div><h4>胸牌工牌</h4><p>参会 / 工作证</p></div>
+        <div class="scene-card text-center"><div class="icon">💌</div><h4>感谢信</h4><p>志愿者 / 客户</p></div>
+        <div class="scene-card text-center"><div class="icon">🆕</div><h4>入职通知</h4><p>新员工入职</p></div>
+        <div class="scene-card text-center"><div class="icon">🥇</div><h4>获奖通知</h4><p>比赛 / 评选结果</p></div>
+        <div class="scene-card text-center"><div class="icon">📅</div><h4>放假通知</h4><p>节假日安排</p></div>
+        <div class="scene-card text-center"><div class="icon">❤️</div><h4>捐赠证书</h4><p>公益捐赠证明</p></div>
+        <div class="scene-card text-center"><div class="icon">📄</div><h4>更多文档</h4><p>自定义模板</p></div>
       </div>
-      <div class="flex items-center gap-3 mb-4">
-        <button id="btn-generate-copy" class="btn-primary inline-flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          生成文案
+    </div>
+  </section>
+
+  <!-- Optional AI Copy -->
+  <section id="ai-copy" class="py-20 md:py-28">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="card overflow-hidden reveal">
+        <button id="ai-toggle" class="ai-panel-toggle">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+              <div class="flex items-center text-lg font-bold text-slate-900">
+                AI 文案助手 <span class="optional-badge">可选</span>
+              </div>
+              <div class="text-sm text-slate-500">不会写正文？选择场景，一键生成正式文案并填入模板</div>
+            </div>
+          </div>
+          <svg id="ai-chevron" class="w-5 h-5 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
         </button>
-        <button id="btn-copy-result" class="btn-secondary" hidden>复制文案</button>
-        <span id="copy-status" class="text-sm text-slate-400"></span>
+        <div id="ai-panel" class="p-6 md:p-8 border-t border-slate-100" hidden>
+          <div id="scenes" class="flex flex-wrap gap-2 mb-5"></div>
+          <div class="grid md:grid-cols-3 gap-4 mb-5">
+            <input id="name" type="text" value="张晓明" class="input" placeholder="收件人 / 获奖者姓名" />
+            <input id="event" type="text" value="2026 年度销售冠军" class="input" placeholder="事件 / 奖项 / 活动名称" />
+            <input id="issuer" type="text" value="字节跳动销售部" class="input" placeholder="颁奖单位 / 主办方" />
+          </div>
+          <div id="extra-field" class="mb-5" hidden>
+            <label id="extra-label" class="block text-sm font-bold text-slate-700 mb-2"></label>
+            <input id="extra" type="text" value="" class="input" />
+          </div>
+          <div class="flex items-center gap-3 mb-5">
+            <button id="btn-generate-copy" class="btn-accent">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              生成文案
+            </button>
+            <button id="btn-copy-result" class="btn-secondary" hidden>复制文案</button>
+            <span id="copy-status" class="text-sm text-slate-400"></span>
+          </div>
+          <div id="copy-output" class="bg-slate-50 rounded-xl p-5 border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap min-h-[100px]"></div>
+        </div>
       </div>
-      <div id="copy-output" class="bg-slate-50 rounded-lg p-4 border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap min-h-[80px]"></div>
-      </div>
-    </section>
+    </div>
+  </section>
 
-  </main>
+  <!-- CTA -->
+  <section class="py-20 md:py-28 hero-bg relative overflow-hidden">
+    <div class="hero-grid"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+      <h2 class="font-display text-3xl md:text-5xl font-bold text-white mb-6">准备好提升文档制作效率了吗？</h2>
+      <p class="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">本 Demo 为在线体验版，完整桌面版支持批量生成成百上千份文档、ZIP 打包、SMTP 邮件发送等功能。</p>
+      <a href="#workspace" class="btn-primary text-lg px-8 py-4">立即体验 Demo</a>
+    </div>
+  </section>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-8">
-    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-      <p class="font-semibold text-slate-700 mb-1">批量文档生成器</p>
-      <p class="mb-2">TRAE AI 创造力大赛参赛作品 · 学习工作 / 社会公益</p>
-      <p>本 Demo 为在线体验版，完整桌面版支持批量生成成百上千份文档、ZIP 打包、SMTP 邮件发送等功能。</p>
+  <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5 font-bold text-white text-lg">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        批量文档生成器
+      </div>
+      <div class="text-sm text-center md:text-right">
+        <p class="text-slate-300 font-semibold">TRAE AI 创造力大赛参赛作品</p>
+        <p>学习工作 / 社会公益 · 在线体验版</p>
+      </div>
     </div>
   </footer>
 
@@ -312,17 +831,6 @@
       chevron.classList.toggle('rotate-180');
     });
 
-    // Scene chips in workspace
-    document.querySelectorAll('.scene-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        currentScene = chip.dataset.scene;
-        updateSceneChips();
-        renderSceneCards();
-        updateExtraField();
-        setDefaultValues();
-      });
-    });
-
     // --- AI Copy Assistant ---
     document.getElementById('btn-generate-copy').addEventListener('click', () => {
       const name = document.getElementById('name').value.trim() || '【姓名】';
@@ -354,7 +862,7 @@
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2200);
+      setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     // --- Field Detection ---
@@ -590,6 +1098,17 @@
       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
       saveAs(blob, '批量文档生成示例.txt');
     }
+
+    // Scroll reveal
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
     // Init
     renderSceneCards();
