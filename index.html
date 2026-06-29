@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 批量文档生成器 - 在线体验 Demo</title>
-  <meta name="description" content="AI 批量文档生成器在线体验：AI 字段识别 + AI 文案助手，模板+表格一键生成千份文档。" />
+  <title>鎵归噺鏂囨。鐢熸垚鍣?- 鍦ㄧ嚎浣撻獙 Demo</title>
+  <meta name="description" content="鎵归噺鏂囨。鐢熸垚鍣ㄥ湪绾夸綋楠岋細涓婁紶妯℃澘 + 绮樿创 Excel锛屼竴閿敓鎴愬崈浠借瘉涔︺€侀個璇峰嚱銆侀€氱煡绛夋枃妗ｃ€? />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -15,351 +15,182 @@
       theme: {
         extend: {
           colors: {
-            brand: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
-            accent: { 500: '#f59e0b', 600: '#d97706' },
-            violet: { 500: '#8b5cf6', 600: '#7c3aed' }
-          },
-          animation: {
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          },
-          keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-20px)' },
-            }
+            primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+            success: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' }
           }
         }
       }
     }
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
-    body { font-family: 'Noto Sans SC', system-ui, sans-serif; }
-    .glass { background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    .glass-dark { background: rgba(15,23,42,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    .typing-cursor::after { content: '|'; animation: blink 1s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    .fade-in { animation: fadeIn .7s ease-out forwards; }
-    @keyframes fadeIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
-    .scene-card { transition: all .25s ease; }
-    .scene-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(14,165,233,0.25); }
-    .scene-card.active { ring: 2px; ring-color: #0ea5e9; border-color: #0ea5e9; background: #f0f9ff; }
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(70px);
-      opacity: .45;
-      z-index: 0;
-      animation: float 8s ease-in-out infinite;
-    }
-    .blob-1 { width: 360px; height: 360px; background: #7dd3fc; top: -120px; right: -80px; animation-delay: 0s; }
-    .blob-2 { width: 300px; height: 300px; background: #fbbf24; bottom: 80px; left: -100px; animation-delay: 2s; }
-    .blob-3 { width: 260px; height: 260px; background: #a78bfa; top: 40%; right: 10%; animation-delay: 4s; }
-    .gradient-text {
-      background: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 50%, #f59e0b 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #0f172a;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 999px;
-      font-size: 14px;
-      opacity: 0;
-      transition: all .35s ease;
-      z-index: 100;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans SC', system-ui, sans-serif; background: #f8fafc; }
+    .workspace-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .btn-primary { background: #2563eb; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.15s; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 500; transition: all 0.15s; }
+    .btn-secondary:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; outline: none; transition: border-color 0.15s; background: #fff; }
+    .input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+    .textarea { min-height: 220px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; line-height: 1.7; }
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.data-table th { background: #f8fafc; text-align: left; padding: 10px 12px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    table.data-table td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; }
+    table.data-table input { width: 100%; border: none; background: transparent; padding: 6px 0; outline: none; font-size: 14px; }
+    table.data-table input:focus { background: #eff6ff; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 13px; font-weight: 500; border: 1px solid #dbeafe; }
+    .tag button { color: #93c5fd; font-size: 16px; line-height: 1; }
+    .tag button:hover { color: #ef4444; }
+    .preview-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; min-height: 280px; padding: 28px; line-height: 1.8; color: #1e293b; }
+    .preview-box h4 { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .scene-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .scene-chip:hover, .scene-chip.active { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+    .section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title .num { width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 100; }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .preview-paper {
-      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-      box-shadow: inset 0 0 60px rgba(14,165,233,0.04), 0 10px 40px -10px rgba(0,0,0,0.08);
-    }
-    .preview-honor {
-      background: linear-gradient(135deg, #fffbeb 0%, #ffffff 50%, #fffbeb 100%);
-      border: 2px solid #f59e0b;
-    }
+    .optional-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 12px; font-weight: 500; margin-left: 8px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 overflow-x-hidden">
+<body class="text-slate-700">
+
   <!-- Nav -->
-  <nav class="fixed top-0 inset-x-0 z-50 glass border-b border-slate-200/80">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-2 font-bold text-lg text-brand-700">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        AI 批量文档生成器
-      </a>
-      <div class="flex items-center gap-3">
-        <a href="#scenes" class="hidden md:block text-sm text-slate-600 hover:text-brand-700 px-3 py-1.5">场景模板</a>
-        <a href="#demo" class="px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition shadow-md shadow-brand-200">立即体验</a>
-      </div>
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 font-bold text-slate-900">
+        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        鎵归噺鏂囨。鐢熸垚鍣?      </div>
+      <div class="text-xs text-slate-500 hidden sm:block">TRAE AI 鍒涢€犲姏澶ц禌 路 瀛︿範宸ヤ綔 / 绀句細鍏泭</div>
     </div>
   </nav>
 
   <!-- Hero -->
-  <header class="relative pt-32 pb-20 px-4 overflow-hidden">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="relative z-10 max-w-4xl mx-auto text-center">
-      <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold mb-5 border border-brand-200">
-        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-        TRAE AI 创造力大赛 · 学习工作 / 社会公益
-      </span>
-      <h1 class="text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
-        一张模板 + 一份表格<br/>
-        <span class="gradient-text">千份智能文档一键生成</span>
-      </h1>
-      <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-        上传 Word/Excel 模板，AI 自动识别字段；输入关键信息，AI 文案助手生成正式正文。适合证书、邀请函、胸牌、通知等批量场景。
-      </p>
-      <div class="flex flex-wrap justify-center gap-4">
-        <a href="#ai-copy" class="px-7 py-3.5 rounded-2xl bg-brand-600 text-white font-semibold shadow-xl shadow-brand-200 hover:bg-brand-700 transition hover:scale-105">体验 AI 文案助手</a>
-        <a href="#ai-fields" class="px-7 py-3.5 rounded-2xl bg-white text-brand-700 font-semibold border border-brand-200 shadow-lg hover:bg-brand-50 transition hover:scale-105">体验 AI 字段识别</a>
-      </div>
-
-      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
-          <div class="text-2xl font-black text-brand-600">10+</div>
-          <div class="text-xs text-slate-500 mt-1">场景模板</div>
-        </div>
-        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
-          <div class="text-2xl font-black text-violet-600">3</div>
-          <div class="text-xs text-slate-500 mt-1">文件格式</div>
-        </div>
-        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
-          <div class="text-2xl font-black text-accent-600">1000+</div>
-          <div class="text-xs text-slate-500 mt-1">份/分钟</div>
-        </div>
-        <div class="bg-white/70 backdrop-blur rounded-2xl p-4 border border-slate-100 shadow-sm">
-          <div class="text-2xl font-black text-emerald-600">0</div>
-          <div class="text-xs text-slate-500 mt-1">代码基础</div>
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-10 md:py-14">
+      <div class="max-w-3xl">
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">涓€寮犳ā鏉?+ 涓€浠借〃鏍硷紝鎵归噺鐢熸垚涓撲笟鏂囨。</h1>
+        <p class="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">
+          鍦ㄦā鏉夸腑鏍囪鏇挎崲浣嶇疆锛岀矘璐?Excel 鏁版嵁锛屾瘡涓€琛岃嚜鍔ㄧ敓鎴愪竴浠?Word 鏂囨。銆傛棤闇€浠ｇ爜銆佹棤闇€鑱旂綉锛岄€傚悎璇佷功銆侀個璇峰嚱銆侀€氱煡銆佽兏鐗岀瓑楂橀鎵归噺鍦烘櫙銆?        </p>
+        <div class="flex flex-wrap items-center gap-3">
+          <a href="#workspace" class="btn-primary inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            寮€濮嬪埗浣?          </a>
+          <span class="text-sm text-slate-500">30 绉掍笂鎵嬶紝鏃犻渶娉ㄥ唽</span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Features -->
-  <section class="py-16 px-4">
-    <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
-      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
-        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-50 text-brand-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">AI 文案助手</h3>
-        <p class="text-slate-500 text-sm leading-relaxed">选择证书、邀请函、通知等场景，输入关键信息，AI 自动生成符合语境的正式文案。</p>
-      </div>
-      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
-        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-accent-100 to-orange-50 text-accent-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">AI 字段识别</h3>
-        <p class="text-slate-500 text-sm leading-relaxed">上传 Word/Excel 模板，自动解析占位符、标签和数据列，一键推荐字段配置。</p>
-      </div>
-      <div class="bg-white rounded-2xl p-7 shadow-sm border border-slate-100 hover:shadow-lg transition group">
-        <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 flex items-center justify-center mb-5 group-hover:scale-110 transition">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-        </div>
-        <h3 class="font-bold text-lg mb-2">实时预览 & 导出</h3>
-        <p class="text-slate-500 text-sm leading-relaxed">填入数据即可预览生成效果，支持导出标准 Word 文档，零代码完成批量制作。</p>
-      </div>
-    </div>
-  </section>
+  <!-- Core Workspace -->
+  <main id="workspace" class="max-w-7xl mx-auto px-4 py-8">
 
-  <!-- AI Copy Assistant -->
-  <section id="ai-copy" class="py-16 px-4 bg-white border-y border-slate-100 relative">
-    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 via-violet-500 to-accent-500"></div>
-    <div class="max-w-6xl mx-auto">
-      <div class="mb-10 text-center md:text-left">
-        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
-          <span class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center text-lg">01</span>
-          AI 文案助手
-        </h2>
-        <p class="text-slate-500 md:text-lg">选择使用场景，填写关键信息，AI 将生成可直接插入文档的正文。</p>
-      </div>
-
-      <!-- Scene Cards -->
-      <div id="scenes" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
-        <!-- Generated by JS -->
-      </div>
-
-      <div class="grid lg:grid-cols-2 gap-8">
-        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">收件人 / 获奖者姓名</label>
-            <input id="name" type="text" value="张晓明" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">事件 / 奖项 / 活动名称</label>
-            <input id="event" type="text" value="2026 年度销售冠军" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">颁奖单位 / 主办方</label>
-            <input id="issuer" type="text" value="字节跳动销售部" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
-          </div>
-          <div id="extra-field" class="hidden">
-            <label id="extra-label" class="block text-sm font-medium text-slate-700 mb-1.5">补充信息</label>
-            <input id="extra" type="text" value="" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white" />
-          </div>
-          <button id="btn-generate-copy" class="w-full py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700 transition shadow-lg shadow-brand-200 flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            AI 生成文案
-          </button>
-        </div>
-        <div class="preview-paper rounded-2xl p-7 border border-slate-200 flex flex-col min-h-[280px]">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
-              <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              生成结果
-            </span>
-            <div class="flex items-center gap-2">
-              <span id="copy-status" class="text-xs text-slate-400">点击左侧按钮生成</span>
-              <button id="btn-copy-result" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition hidden">复制</button>
-            </div>
-          </div>
-          <div id="copy-output" class="flex-1 whitespace-pre-wrap text-slate-800 leading-relaxed font-medium text-base"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- AI Field Detection -->
-  <section id="ai-fields" class="py-16 px-4 bg-slate-50 relative">
-    <div class="max-w-6xl mx-auto">
-      <div class="mb-10 text-center md:text-left">
-        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
-          <span class="w-10 h-10 rounded-xl bg-accent-100 text-accent-600 flex items-center justify-center text-lg">02</span>
-          AI 字段识别
-        </h2>
-        <p class="text-slate-500 md:text-lg">粘贴模板文本，或上传 Word / Excel 文件，AI 自动提取字段和数据列。</p>
-      </div>
-      <div class="grid lg:grid-cols-2 gap-8">
-        <div class="space-y-4">
-          <div class="bg-white rounded-2xl p-1 border border-slate-200 shadow-sm">
-            <textarea id="template-text" rows="9" class="w-full rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" placeholder="例如：尊敬的{{姓名}}，您荣获{{奖项}}，颁发日期{{日期}}。"></textarea>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="flex-1 cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 py-4 text-center hover:border-brand-400 hover:bg-brand-50 transition group">
-              <svg class="w-6 h-6 mx-auto text-slate-400 group-hover:text-brand-500 mb-1 transition" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-              <span class="text-sm text-slate-600 group-hover:text-brand-700 font-medium">上传 Word / Excel 文件</span>
+    <!-- Step 1: Template -->
+    <section class="workspace-card p-5 mb-6">
+      <div class="section-title"><span class="num">1</span> 鍑嗗妯℃澘 <span class="text-sm font-normal text-slate-500">杈撳叆甯﹀崰浣嶇鐨勬ā鏉匡紝鎴栦笂浼?Word / Excel 鑷姩璇嗗埆</span></div>
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2">
+          <textarea id="template-text" class="input textarea" placeholder="渚嬪锛?#10;灏婃暚鐨剓{濮撳悕}}锛?#10;&#10;鎭枩鎮ㄨ崳鑾封€渰{濂栭」}}鈥濓紒&#10;棰佸鍗曚綅锛歿{鍗曚綅}}&#10;鏃ユ湡锛歿{鏃ユ湡}}&#10;&#10;{{姝ｆ枃}}"></textarea>
+          <div class="flex flex-wrap items-center gap-3 mt-3">
+            <button id="btn-load-example" class="btn-primary inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+              鍔犺浇绀轰緥
+            </button>
+            <label class="btn-secondary inline-flex items-center gap-2 cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              涓婁紶 Word / Excel
               <input id="template-file" type="file" accept=".docx,.xlsx,.xls" class="hidden" />
             </label>
-            <button id="btn-detect" class="px-6 py-4 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold hover:from-accent-600 hover:to-accent-700 transition shadow-lg shadow-orange-200">开始识别</button>
-          </div>
-          <p id="file-name" class="text-xs text-slate-400 h-4"></p>
-        </div>
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-sm font-bold text-slate-700">识别到的字段</span>
-            <button id="btn-clear-fields" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition">清空</button>
-          </div>
-          <div id="fields-container" class="flex flex-wrap gap-2 min-h-[140px]">
-            <span class="text-sm text-slate-400">暂无字段，请输入文本或上传文件后点击识别。</span>
+            <button id="btn-detect" class="btn-primary">璇嗗埆瀛楁</button>
+            <button id="btn-clear-fields" class="btn-secondary text-red-600 hover:text-red-700 hover:bg-red-50">娓呯┖瀛楁</button>
+            <span id="file-name" class="text-xs text-slate-400"></span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Data & Preview -->
-  <section id="demo" class="py-16 px-4 bg-white border-y border-slate-100">
-    <div class="max-w-6xl mx-auto">
-      <div class="mb-10 text-center md:text-left">
-        <h2 class="text-2xl md:text-4xl font-bold mb-3 flex items-center justify-center md:justify-start gap-3">
-          <span class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">03</span>
-          数据填充 & 文档预览
-        </h2>
-        <p class="text-slate-500 md:text-lg">编辑表格数据，点击预览查看替换效果，也可直接导出 Word 文档。</p>
-      </div>
-      <div class="grid lg:grid-cols-2 gap-8">
         <div>
-          <div class="flex items-center justify-between mb-3">
-            <label class="text-sm font-bold text-slate-700">数据表</label>
-            <button id="btn-add-row" class="text-sm px-3 py-1.5 rounded-lg bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium transition">+ 添加一行</button>
+          <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 h-full">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm font-semibold text-slate-700">璇嗗埆鍒扮殑瀛楁</span>
+              <span id="field-count" class="text-xs text-slate-400">0 涓?/span>
+            </div>
+            <div id="fields-container" class="flex flex-wrap gap-2 min-h-[120px]">
+              <span class="text-sm text-slate-400">鍦ㄥ乏渚ц緭鍏?{{濮撳悕}} 绛夊崰浣嶇锛岀偣鍑汇€岃瘑鍒瓧娈点€嶅嵆鍙湅鍒扮粨鏋溿€?/span>
+            </div>
           </div>
-          <div class="overflow-auto rounded-2xl border border-slate-200 shadow-sm">
-            <table class="w-full text-sm">
-              <thead class="bg-slate-50 text-slate-600">
-                <tr id="data-head"><th class="px-4 py-3 text-left font-semibold">字段</th></tr>
-              </thead>
-              <tbody id="data-body" class="divide-y divide-slate-100 bg-white"></tbody>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2 & 3: Data + Preview -->
+    <section class="workspace-card p-5 mb-6">
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Data -->
+        <div>
+          <div class="section-title"><span class="num">2</span> 濉叆鏁版嵁 <span class="text-sm font-normal text-slate-500">姣忎竴琛屽搴斾竴浠芥枃妗?/span></div>
+          <div class="overflow-auto rounded-lg border border-slate-200 mb-3" style="max-height: 320px;">
+            <table class="data-table">
+              <thead><tr id="data-head"><th>瀛楁</th></tr></thead>
+              <tbody id="data-body" class="bg-white"></tbody>
             </table>
           </div>
+          <button id="btn-add-row" class="btn-secondary text-sm">+ 娣诲姞涓€琛?/button>
         </div>
+        <!-- Preview -->
         <div>
-          <div class="flex items-center justify-between mb-3">
-            <label class="text-sm font-bold text-slate-700">生成预览</label>
-            <div class="flex gap-2">
-              <button id="btn-preview" class="px-4 py-2 rounded-xl bg-brand-100 text-brand-700 text-sm font-semibold hover:bg-brand-200 transition">预览第一行</button>
-              <button id="btn-download" class="px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition shadow-md shadow-brand-200">导出 Word</button>
-            </div>
+          <div class="section-title"><span class="num">3</span> 棰勮 & 瀵煎嚭</div>
+          <div id="preview-card" class="preview-box mb-3">
+            <h4>鏂囨。棰勮</h4>
+            <div class="text-slate-400 text-sm py-8 text-center">濉啓妯℃澘鍜屾暟鎹悗锛岀偣鍑汇€岄瑙堛€嶆煡鐪嬬敓鎴愭晥鏋?/div>
           </div>
-          <div id="preview-card" class="preview-paper rounded-2xl border border-slate-200 p-8 min-h-[320px]">
-            <div class="text-center text-slate-400 py-24">
-              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              点击“预览第一行”查看生成效果
-            </div>
+          <div class="flex gap-3">
+            <button id="btn-preview" class="btn-secondary flex-1">棰勮绗竴琛?/button>
+            <button id="btn-download" class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              瀵煎嚭 Word
+            </button>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Use Cases -->
-  <section class="py-16 px-4 bg-gradient-to-b from-slate-50 to-white">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-10">
-        <h2 class="text-2xl md:text-3xl font-bold mb-3">覆盖多种真实场景</h2>
-        <p class="text-slate-500">企业、学校、公益组织都能快速上手</p>
+    <!-- Optional AI Copy -->
+    <section id="ai-copy" class="workspace-card mb-6 border-l-4 border-l-slate-300 overflow-hidden">
+      <button id="ai-toggle" class="w-full p-5 flex items-center justify-between text-left bg-slate-50/50 hover:bg-slate-50 transition-colors">
+        <div class="section-title !mb-0">
+          AI 鏂囨鍔╂墜 <span class="optional-badge">鍙€?/span>
+          <span class="text-sm font-normal text-slate-500 font-normal">涓嶄細鍐欐鏂囷紵閫夋嫨鍦烘櫙锛屼竴閿敓鎴愭寮忔枃妗?/span>
+        </div>
+        <svg id="ai-chevron" class="w-5 h-5 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+      </button>
+      <div id="ai-panel" class="hidden p-5 pt-0">
+        <div id="scenes" class="flex flex-wrap gap-2 mb-4"></div>
+      <div class="grid md:grid-cols-3 gap-4 mb-4">
+        <input id="name" type="text" value="寮犳檽鏄? class="input" placeholder="鏀朵欢浜?/ 鑾峰鑰呭鍚? />
+        <input id="event" type="text" value="2026 骞村害閿€鍞啝鍐? class="input" placeholder="浜嬩欢 / 濂栭」 / 娲诲姩鍚嶇О" />
+        <input id="issuer" type="text" value="瀛楄妭璺冲姩閿€鍞儴" class="input" placeholder="棰佸鍗曚綅 / 涓诲姙鏂? />
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3">🏆</div>
-          <h4 class="font-bold text-sm">优秀员工证书</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-3">📩</div>
-          <h4 class="font-bold text-sm">会议邀请函</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3">🎫</div>
-          <h4 class="font-bold text-sm">活动胸牌</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-3">📢</div>
-          <h4 class="font-bold text-sm">通知公告</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3">💌</div>
-          <h4 class="font-bold text-sm">志愿者感谢信</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">🎓</div>
-          <h4 class="font-bold text-sm">学生奖状</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-3">🤝</div>
-          <h4 class="font-bold text-sm">客户感谢信</h4>
-        </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center hover:shadow-md transition">
-          <div class="w-12 h-12 mx-auto rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3">📅</div>
-          <h4 class="font-bold text-sm">放假通知</h4>
-        </div>
+      <div id="extra-field" class="hidden mb-4">
+        <label id="extra-label" class="block text-sm font-medium text-slate-700 mb-1.5"></label>
+        <input id="extra" type="text" value="" class="input" />
       </div>
-    </div>
-  </section>
+      <div class="flex items-center gap-3 mb-4">
+        <button id="btn-generate-copy" class="btn-primary inline-flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          鐢熸垚鏂囨
+        </button>
+        <button id="btn-copy-result" class="btn-secondary hidden">澶嶅埗鏂囨</button>
+        <span id="copy-status" class="text-sm text-slate-400"></span>
+      </div>
+      <div id="copy-output" class="bg-slate-50 rounded-lg p-4 border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap min-h-[80px]"></div>
+      </div>
+    </section>
+
+  </main>
 
   <!-- Footer -->
-  <footer class="py-12 text-center text-slate-500 text-sm bg-slate-900 text-white">
-    <div class="max-w-2xl mx-auto px-4">
-      <p class="text-lg font-bold text-white mb-2">AI 批量文档生成器</p>
-      <p class="text-slate-400 mb-4">TRAE AI 创造力大赛参赛作品 · 学习工作 / 社会公益</p>
-      <p class="text-slate-500">本 Demo 为在线体验版，完整桌面版支持批量生成、ZIP 打包、邮件发送等功能。</p>
+  <footer class="bg-white border-t border-slate-200 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
+      <p class="font-semibold text-slate-700 mb-1">鎵归噺鏂囨。鐢熸垚鍣?/p>
+      <p class="mb-2">TRAE AI 鍒涢€犲姏澶ц禌鍙傝禌浣滃搧 路 瀛︿範宸ヤ綔 / 绀句細鍏泭</p>
+      <p>鏈?Demo 涓哄湪绾夸綋楠岀増锛屽畬鏁存闈㈢増鏀寔鎵归噺鐢熸垚鎴愮櫨涓婂崈浠芥枃妗ｃ€乑IP 鎵撳寘銆丼MTP 閭欢鍙戦€佺瓑鍔熻兘銆?/p>
     </div>
   </footer>
 
@@ -374,98 +205,64 @@
 
     // --- Scene Config ---
     const scenes = [
-      { key: 'honor', label: '优秀员工证书', icon: '🏆', desc: '荣誉证书 / 奖状', color: 'amber' },
-      { key: 'invite', label: '会议邀请函', icon: '📩', desc: '活动 / 会议邀请', color: 'blue' },
-      { key: 'volunteer', label: '志愿者感谢信', icon: '💌', desc: '公益 / 志愿活动', color: 'pink' },
-      { key: 'notice', label: '活动通知', icon: '📢', desc: '内部 / 活动通知', color: 'green' },
-      { key: 'onboarding', label: '入职通知', icon: '🆕', desc: '新员工入职', color: 'indigo' },
-      { key: 'award', label: '获奖通知', icon: '🥇', desc: '比赛 / 评选结果', color: 'yellow' },
-      { key: 'client', label: '客户感谢信', icon: '🤝', desc: '合作 / 致谢', color: 'teal' },
-      { key: 'holiday', label: '放假通知', icon: '📅', desc: '节假日安排', color: 'rose' },
-      { key: 'badge', label: '参会胸牌', icon: '🎫', desc: '胸牌 / 工作证', color: 'purple' },
-      { key: 'donation', label: '捐赠证书', icon: '❤️', desc: '公益捐赠证明', color: 'red' },
+      { key: 'honor', label: '浼樼鍛樺伐璇佷功', icon: '馃弳', desc: '鑽ｈ獕璇佷功 / 濂栫姸' },
+      { key: 'invite', label: '浼氳閭€璇峰嚱', icon: '馃摡', desc: '娲诲姩 / 浼氳閭€璇? },
+      { key: 'volunteer', label: '蹇楁効鑰呮劅璋俊', icon: '馃拰', desc: '鍏泭 / 蹇楁効娲诲姩' },
+      { key: 'notice', label: '娲诲姩閫氱煡', icon: '馃摙', desc: '鍐呴儴 / 娲诲姩閫氱煡' },
+      { key: 'onboarding', label: '鍏ヨ亴閫氱煡', icon: '馃啎', desc: '鏂板憳宸ュ叆鑱? },
+      { key: 'award', label: '鑾峰閫氱煡', icon: '馃', desc: '姣旇禌 / 璇勯€夌粨鏋? },
+      { key: 'client', label: '瀹㈡埛鎰熻阿淇?, icon: '馃', desc: '鍚堜綔 / 鑷磋阿' },
+      { key: 'holiday', label: '鏀惧亣閫氱煡', icon: '馃搮', desc: '鑺傚亣鏃ュ畨鎺? },
+      { key: 'badge', label: '鍙備細鑳哥墝', icon: '馃帿', desc: '鑳哥墝 / 宸ヤ綔璇? },
+      { key: 'donation', label: '鎹愯禒璇佷功', icon: '鉂わ笍', desc: '鍏泭鎹愯禒璇佹槑' },
     ];
 
     const templates = {
-      honor: `兹证明 {{name}} 同志在 {{event}} 评选中表现优异，成绩突出，荣获“{{event}}”称号。
-
-特发此证，以资鼓励。`,
-      invite: `尊敬的 {{name}}：
-
-诚挚邀请您参加由 {{issuer}} 主办的「{{event}}」。您的出席将是我们莫大的荣幸。
-
-期待与您相见！`,
-      volunteer: `亲爱的 {{name}}：
-
-感谢您在 {{event}} 中的无私奉献与辛勤付出。您的热情与行动，为活动增添了温暖与力量。
-
-谨代表 {{issuer}} 向您致以诚挚的谢意！`,
-      notice: `各位同事：
-
-由 {{issuer}} 组织的「{{event}}」即将举行，请大家准时参加并做好准备。
-
-特此通知。`,
-      onboarding: `尊敬的 {{name}}：
-
-恭喜您通过 {{issuer}} 的面试，正式成为我们公司的一员！您的入职岗位为「{{event}}」，请于 {{extra}} 携带相关资料办理入职手续。
-
-期待与您共同成长！`,
-      award: `尊敬的 {{name}}：
-
-恭喜您在 {{issuer}} 举办的「{{event}}」中表现优异，荣获 {{extra}}。这是对您的努力与才华的最佳肯定。
-
-特此通知，望再接再厉！`,
-      client: `尊敬的 {{name}}：
-
-衷心感谢贵司对 {{issuer}} 的信任与支持。在「{{event}}」项目中，双方团队的紧密协作让合作取得了丰硕成果。
-
-期待未来继续携手，共创佳绩！`,
-      holiday: `各位同事：
-
-根据 {{issuer}} 安排，「{{event}}」放假时间为 {{extra}}。请大家提前做好工作交接，注意出行安全，度过一个愉快的假期。
-
-特此通知。`,
-      badge: `姓名：{{name}}
-单位：{{issuer}}
-活动：{{event}}
-身份：{{extra}}
-
-请佩戴此胸牌参加活动，谢谢配合。`,
-      donation: `尊敬的 {{name}}：
-
-感谢您对 {{event}} 的爱心捐赠。您的善举将为 {{extra}} 带来切实帮助，公益因您而更有力量。
-
-特发此证，以表谢忱。`
+      honor: `鍏硅瘉鏄?{{name}} 鍚屽織鍦?{{event}} 璇勯€変腑琛ㄧ幇浼樺紓锛屾垚缁╃獊鍑猴紝鑽ｈ幏鈥渰{event}}鈥濈О鍙枫€俓n\n鐗瑰彂姝よ瘉锛屼互璧勯紦鍔便€俙,
+      invite: `灏婃暚鐨?{{name}}锛歕n\n璇氭寶閭€璇锋偍鍙傚姞鐢?{{issuer}} 涓诲姙鐨勩€寋{event}}銆嶃€傛偍鐨勫嚭甯皢鏄垜浠帿澶х殑鑽ｅ垢銆俓n\n鏈熷緟涓庢偍鐩歌锛乣,
+      volunteer: `浜茬埍鐨?{{name}}锛歕n\n鎰熻阿鎮ㄥ湪 {{event}} 涓殑鏃犵濂夌尞涓庤緵鍕や粯鍑恒€傛偍鐨勭儹鎯呬笌琛屽姩锛屼负娲诲姩澧炴坊浜嗘俯鏆栦笌鍔涢噺銆俓n\n璋ㄤ唬琛?{{issuer}} 鍚戞偍鑷翠互璇氭寶鐨勮阿鎰忥紒`,
+      notice: `鍚勪綅鍚屼簨锛歕n\n鐢?{{issuer}} 缁勭粐鐨勩€寋{event}}銆嶅嵆灏嗕妇琛岋紝璇峰ぇ瀹跺噯鏃跺弬鍔犲苟鍋氬ソ鍑嗗銆俓n\n鐗规閫氱煡銆俙,
+      onboarding: `灏婃暚鐨?{{name}}锛歕n\n鎭枩鎮ㄩ€氳繃 {{issuer}} 鐨勯潰璇曪紝姝ｅ紡鎴愪负鎴戜滑鍏徃鐨勪竴鍛橈紒鎮ㄧ殑鍏ヨ亴宀椾綅涓恒€寋{event}}銆嶏紝璇蜂簬 {{extra}} 鎼哄甫鐩稿叧璧勬枡鍔炵悊鍏ヨ亴鎵嬬画銆俓n\n鏈熷緟涓庢偍鍏卞悓鎴愰暱锛乣,
+      award: `灏婃暚鐨?{{name}}锛歕n\n鎭枩鎮ㄥ湪 {{issuer}} 涓惧姙鐨勩€寋{event}}銆嶄腑琛ㄧ幇浼樺紓锛岃崳鑾?{{extra}}銆傝繖鏄鎮ㄧ殑鍔姏涓庢墠鍗庣殑鏈€浣宠偗瀹氥€俓n\n鐗规閫氱煡锛屾湜鍐嶆帴鍐嶅帀锛乣,
+      client: `灏婃暚鐨?{{name}}锛歕n\n琛峰績鎰熻阿璐靛徃瀵?{{issuer}} 鐨勪俊浠讳笌鏀寔銆傚湪銆寋{event}}銆嶉」鐩腑锛屽弻鏂瑰洟闃熺殑绱у瘑鍗忎綔璁╁悎浣滃彇寰椾簡涓扮鎴愭灉銆俓n\n鏈熷緟鏈潵缁х画鎼烘墜锛屽叡鍒涗匠缁╋紒`,
+      holiday: `鍚勪綅鍚屼簨锛歕n\n鏍规嵁 {{issuer}} 瀹夋帓锛屻€寋{event}}銆嶆斁鍋囨椂闂翠负 {{extra}}銆傝澶у鎻愬墠鍋氬ソ宸ヤ綔浜ゆ帴锛屾敞鎰忓嚭琛屽畨鍏紝搴﹁繃涓€涓剦蹇殑鍋囨湡銆俓n\n鐗规閫氱煡銆俙,
+      badge: `濮撳悕锛歿{name}}\n鍗曚綅锛歿{issuer}}\n娲诲姩锛歿{event}}\n韬唤锛歿{extra}}\n\n璇蜂僵鎴存鑳哥墝鍙傚姞娲诲姩锛岃阿璋㈤厤鍚堛€俙,
+      donation: `灏婃暚鐨?{{name}}锛歕n\n鎰熻阿鎮ㄥ {{event}} 鐨勭埍蹇冩崘璧犮€傛偍鐨勫杽涓惧皢涓?{{extra}} 甯︽潵鍒囧疄甯姪锛屽叕鐩婂洜鎮ㄨ€屾洿鏈夊姏閲忋€俓n\n鐗瑰彂姝よ瘉锛屼互琛ㄨ阿蹇便€俙
     };
 
     const extraLabels = {
-      onboarding: '入职日期',
-      award: '奖项等级',
-      holiday: '放假时间',
-      badge: '参会身份',
-      donation: '受助对象'
+      onboarding: '鍏ヨ亴鏃ユ湡',
+      award: '濂栭」绛夌骇',
+      holiday: '鏀惧亣鏃堕棿',
+      badge: '鍙備細韬唤',
+      donation: '鍙楀姪瀵硅薄'
     };
 
-    // --- Render Scene Cards ---
+    const defaultTemplate = `灏婃暚鐨剓{濮撳悕}}锛歕n\n鎭枩鎮ㄨ崳鑾封€渰{濂栭」}}鈥濓紒\n棰佸鍗曚綅锛歿{鍗曚綅}}\n鏃ユ湡锛歿{鏃ユ湡}}\n\n{{姝ｆ枃}}`;
+
+    // --- Render Scene Cards (AI copy section) ---
     function renderSceneCards() {
       const container = document.getElementById('scenes');
       container.innerHTML = scenes.map(s => `
-        <button class="scene-card text-left p-4 rounded-2xl border border-slate-200 bg-white ${s.key === currentScene ? 'active' : ''}" data-scene="${s.key}">
-          <div class="flex items-center gap-3 mb-2">
-            <span class="text-2xl">${s.icon}</span>
-            <span class="font-bold text-slate-800 text-sm">${s.label}</span>
-          </div>
-          <p class="text-xs text-slate-500">${s.desc}</p>
+        <button class="scene-chip ${s.key === currentScene ? 'active' : ''}" data-scene="${s.key}">
+          <span>${s.icon}</span>
+          <span>${s.label}</span>
         </button>
       `).join('');
-
-      container.querySelectorAll('.scene-card').forEach(card => {
+      container.querySelectorAll('.scene-chip').forEach(card => {
         card.addEventListener('click', () => {
           currentScene = card.dataset.scene;
           renderSceneCards();
+          updateSceneChips();
           updateExtraField();
           setDefaultValues();
         });
+      });
+    }
+
+    function updateSceneChips() {
+      document.querySelectorAll('.scene-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.scene === currentScene);
       });
     }
 
@@ -484,27 +281,27 @@
 
     function defaultExtraValue(scene) {
       const map = {
-        onboarding: '2026 年 7 月 1 日',
-        award: '一等奖',
-        holiday: '2026 年 10 月 1 日至 10 月 7 日',
-        badge: '嘉宾',
-        donation: '山区儿童'
+        onboarding: '2026 骞?7 鏈?1 鏃?,
+        award: '涓€绛夊',
+        holiday: '2026 骞?10 鏈?1 鏃ヨ嚦 10 鏈?7 鏃?,
+        badge: '鍢夊',
+        donation: '灞卞尯鍎跨'
       };
       return map[scene] || '';
     }
 
     function setDefaultValues() {
       const defaults = {
-        honor: { name: '张晓明', event: '2026 年度销售冠军', issuer: '字节跳动销售部' },
-        invite: { name: '张晓明', event: '2026 全球开发者大会', issuer: '字节跳动' },
-        volunteer: { name: '李雪婷', event: '2026 公益助学行动', issuer: '爱心志愿者协会' },
-        notice: { name: '各位同事', event: '2026 年度总结大会', issuer: '公司人力资源部' },
-        onboarding: { name: '王浩然', event: '前端开发工程师', issuer: '字节跳动' },
-        award: { name: '陈雨涵', event: '2026 创新设计大赛', issuer: '设计协会' },
-        client: { name: '腾讯科技', event: '2026 联合营销项目', issuer: '字节跳动市场部' },
-        holiday: { name: '各位同事', event: '国庆节', issuer: '公司行政部' },
-        badge: { name: '刘子轩', event: '2026 AI 技术峰会', issuer: '极客社区' },
-        donation: { name: '赵文静', event: '2026 暖冬助学计划', issuer: '公益基金会' }
+        honor: { name: '寮犳檽鏄?, event: '2026 骞村害閿€鍞啝鍐?, issuer: '瀛楄妭璺冲姩閿€鍞儴' },
+        invite: { name: '寮犳檽鏄?, event: '2026 鍏ㄧ悆寮€鍙戣€呭ぇ浼?, issuer: '瀛楄妭璺冲姩' },
+        volunteer: { name: '鏉庨洩濠?, event: '2026 鍏泭鍔╁琛屽姩', issuer: '鐖卞績蹇楁効鑰呭崗浼? },
+        notice: { name: '鍚勪綅鍚屼簨', event: '2026 骞村害鎬荤粨澶т細', issuer: '鍏徃浜哄姏璧勬簮閮? },
+        onboarding: { name: '鐜嬫旦鐒?, event: '鍓嶇寮€鍙戝伐绋嬪笀', issuer: '瀛楄妭璺冲姩' },
+        award: { name: '闄堥洦娑?, event: '2026 鍒涙柊璁捐澶ц禌', issuer: '璁捐鍗忎細' },
+        client: { name: '鑵捐绉戞妧', event: '2026 鑱斿悎钀ラ攢椤圭洰', issuer: '瀛楄妭璺冲姩甯傚満閮? },
+        holiday: { name: '鍚勪綅鍚屼簨', event: '鍥藉簡鑺?, issuer: '鍏徃琛屾斂閮? },
+        badge: { name: '鍒樺瓙杞?, event: '2026 AI 鎶€鏈嘲浼?, issuer: '鏋佸绀惧尯' },
+        donation: { name: '璧垫枃闈?, event: '2026 鏆栧啲鍔╁璁″垝', issuer: '鍏泭鍩洪噾浼? }
       };
       const d = defaults[currentScene] || defaults.honor;
       document.getElementById('name').value = d.name;
@@ -515,43 +312,50 @@
       }
     }
 
+    // AI panel toggle
+    document.getElementById('ai-toggle').addEventListener('click', () => {
+      const panel = document.getElementById('ai-panel');
+      const chevron = document.getElementById('ai-chevron');
+      panel.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+    });
+
+    // Scene chips in workspace
+    document.querySelectorAll('.scene-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        currentScene = chip.dataset.scene;
+        updateSceneChips();
+        renderSceneCards();
+        updateExtraField();
+        setDefaultValues();
+      });
+    });
+
     // --- AI Copy Assistant ---
     document.getElementById('btn-generate-copy').addEventListener('click', () => {
-      const name = document.getElementById('name').value.trim() || '【姓名】';
-      const event = document.getElementById('event').value.trim() || '【事件】';
-      const issuer = document.getElementById('issuer').value.trim() || '【单位】';
-      const extra = document.getElementById('extra').value.trim() || '【补充信息】';
+      const name = document.getElementById('name').value.trim() || '銆愬鍚嶃€?;
+      const event = document.getElementById('event').value.trim() || '銆愪簨浠躲€?;
+      const issuer = document.getElementById('issuer').value.trim() || '銆愬崟浣嶃€?;
+      const extra = document.getElementById('extra').value.trim() || '銆愯ˉ鍏呬俊鎭€?;
       const tpl = templates[currentScene] || templates.honor;
       const raw = tpl.replace(/{{name}}/g, name).replace(/{{event}}/g, event).replace(/{{issuer}}/g, issuer).replace(/{{extra}}/g, extra);
       const output = document.getElementById('copy-output');
       const status = document.getElementById('copy-status');
       const copyBtn = document.getElementById('btn-copy-result');
-      status.textContent = 'AI 正在生成...';
+      status.textContent = '姝ｅ湪鐢熸垚...';
       copyBtn.classList.add('hidden');
       generatedCopy = raw;
-      let i = 0;
-      output.textContent = '';
-      const cursor = document.createElement('span');
-      cursor.className = 'typing-cursor';
-      output.appendChild(cursor);
-      const timer = setInterval(() => {
-        if (i >= raw.length) {
-          clearInterval(timer);
-          cursor.remove();
-          status.textContent = '生成完成';
-          copyBtn.classList.remove('hidden');
-          updateDataTable();
-          previewRow(0);
-          return;
-        }
-        output.insertBefore(document.createTextNode(raw[i]), cursor);
-        i++;
-      }, 14);
+      output.textContent = raw;
+      status.textContent = '鐢熸垚瀹屾垚锛屽凡鑷姩濉叆銆屾鏂囥€嶅瓧娈?;
+      copyBtn.classList.remove('hidden');
+      updateDataTable();
+      previewRow(0);
+      showToast('鏂囨宸茬敓鎴愬苟濉叆鏁版嵁琛?);
     });
 
     document.getElementById('btn-copy-result').addEventListener('click', () => {
       if (!generatedCopy) return;
-      navigator.clipboard.writeText(generatedCopy).then(() => showToast('已复制到剪贴板'));
+      navigator.clipboard.writeText(generatedCopy).then(() => showToast('宸插鍒跺埌鍓创鏉?));
     });
 
     function showToast(msg) {
@@ -562,13 +366,6 @@
     }
 
     // --- Field Detection ---
-    const defaultTemplate = `尊敬的{{姓名}}：
-
-恭喜您荣获“{{奖项}}”！
-颁奖单位：{{单位}}
-日期：{{日期}}
-
-{{正文}}`;
     document.getElementById('template-text').value = defaultTemplate;
 
     function cleanFieldName(name) {
@@ -577,11 +374,7 @@
 
     function detectFields(text) {
       const set = new Set();
-      const patterns = [
-        /\{\{([^}]+)\}\}/g,
-        /\{([^}]+)\}/g,
-        /\[([^\]]+)\]/g
-      ];
+      const patterns = [ /\{\{([^}]+)\}\}/g, /\{([^}]+)\}/g, /\[([^\]]+)\]/g ];
       patterns.forEach(re => {
         let m;
         while ((m = re.exec(text)) !== null) {
@@ -589,7 +382,7 @@
           if (cleaned) set.add(cleaned);
         }
       });
-      const common = ['姓名','名称','奖项','日期','时间','地点','单位','部门','编号','邮箱','电话','地址','正文','内容','职位','身份','受助对象'];
+      const common = ['濮撳悕','鍚嶇О','濂栭」','鏃ユ湡','鏃堕棿','鍦扮偣','鍗曚綅','閮ㄩ棬','缂栧彿','閭','鐢佃瘽','鍦板潃','姝ｆ枃','鍐呭','鑱屼綅','韬唤','鍙楀姪瀵硅薄'];
       common.forEach(word => {
         const re = new RegExp(word, 'g');
         if (re.test(text) && !Array.from(set).some(f => f.includes(word))) set.add(word);
@@ -599,14 +392,15 @@
 
     function renderFields() {
       const container = document.getElementById('fields-container');
+      document.getElementById('field-count').textContent = detectedFields.length + ' 涓?;
       if (detectedFields.length === 0) {
-        container.innerHTML = '<span class="text-sm text-slate-400">暂无字段，请输入文本或上传文件后点击识别。</span>';
+        container.innerHTML = '<span class="text-sm text-slate-400">鍦ㄦā鏉夸腑浣跨敤 {{瀛楁鍚峿} 鏍囪鏇挎崲浣嶇疆锛岀偣鍑汇€岃瘑鍒瓧娈点€嶅嵆鍙湅鍒扮粨鏋溿€?/span>';
         return;
       }
       container.innerHTML = detectedFields.map((f, idx) => `
-        <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-brand-50 text-brand-700 text-sm border border-brand-100 hover:bg-brand-100 transition">
+        <span class="tag">
           ${f}
-          <button data-idx="${idx}" class="field-remove text-brand-400 hover:text-red-500 font-bold ml-1">×</button>
+          <button data-idx="${idx}" class="field-remove">脳</button>
         </span>
       `).join('');
       container.querySelectorAll('.field-remove').forEach(btn => {
@@ -618,6 +412,19 @@
       });
       updateDataTable();
     }
+
+    document.getElementById('btn-load-example').addEventListener('click', () => {
+      document.getElementById('template-text').value = defaultTemplate;
+      detectedFields = ['濮撳悕','濂栭」','鍗曚綅','鏃ユ湡','姝ｆ枃'];
+      dataRows = [
+        { '濮撳悕': '寮犳檽鏄?, '濂栭」': '2026 骞村害閿€鍞啝鍐?, '鍗曚綅': '瀛楄妭璺冲姩閿€鍞儴', '鏃ユ湡': '2026 骞?6 鏈?29 鏃?, '姝ｆ枃': '' },
+        { '濮撳悕': '鏉庨洩濠?, '濂栭」': '鏈€浣虫柊浜哄', '鍗曚綅': '瀛楄妭璺冲姩甯傚満閮?, '鏃ユ湡': '2026 骞?6 鏈?29 鏃?, '姝ｆ枃': '' }
+      ];
+      renderFields();
+      updateDataTable();
+      previewRow(0);
+      showToast('宸插姞杞界ず渚嬶紝鍙洿鎺ラ瑙堟垨瀵煎嚭');
+    });
 
     document.getElementById('btn-detect').addEventListener('click', async () => {
       const fileInput = document.getElementById('template-file');
@@ -644,7 +451,7 @@
               dataRows = [row];
             }
             renderFields();
-            showToast(`识别到 ${headers.length} 个字段`);
+            showToast(`璇嗗埆鍒?${headers.length} 涓瓧娈礰);
             return;
           }
         }
@@ -653,12 +460,14 @@
         detectedFields = detectFields(textInput);
       }
       renderFields();
-      showToast(`识别到 ${detectedFields.length} 个字段`);
+      showToast(`璇嗗埆鍒?${detectedFields.length} 涓瓧娈礰);
     });
 
     document.getElementById('btn-clear-fields').addEventListener('click', () => {
       detectedFields = [];
+      dataRows = [];
       renderFields();
+      updateDataTable();
     });
 
     document.getElementById('template-file').addEventListener('change', (e) => {
@@ -669,8 +478,8 @@
     function updateDataTable() {
       const thead = document.getElementById('data-head');
       const tbody = document.getElementById('data-body');
-      const fields = detectedFields.length ? detectedFields : ['姓名','奖项','单位','日期'];
-      thead.innerHTML = fields.map(f => `<th class="px-4 py-3 text-left font-semibold min-w-[110px]">${f}</th>`).join('');
+      const fields = detectedFields.length ? detectedFields : ['濮撳悕','濂栭」','鍗曚綅','鏃ユ湡'];
+      thead.innerHTML = fields.map(f => `<th>${f}</th>`).join('');
 
       if (dataRows.length === 0) {
         dataRows = [
@@ -685,7 +494,7 @@
 
       tbody.innerHTML = dataRows.map((row, rIdx) => `
         <tr>
-          ${fields.map(f => `<td class="px-4 py-2"><input data-row="${rIdx}" data-field="${f}" value="${escapeHtml(row[f])}" class="w-full bg-transparent outline-none py-1" /></td>`).join('')}
+          ${fields.map(f => `<td><input data-row="${rIdx}" data-field="${f}" value="${escapeHtml(row[f])}" /></td>`).join('')}
         </tr>
       `).join('');
 
@@ -698,26 +507,26 @@
 
     function sampleValue(field, idx = 1) {
       const map = {
-        '姓名': ['张晓明', '李雪婷'][idx - 1] || '王浩然',
-        '名称': ['张晓明', '李雪婷'][idx - 1] || '王浩然',
-        '奖项': ['2026 年度销售冠军', '最佳新人奖'][idx - 1] || '优秀员工',
-        '事件': ['2026 年度销售冠军', '最佳新人奖'][idx - 1] || '优秀员工',
-        '单位': ['字节跳动销售部', '字节跳动市场部'][idx - 1] || '字节跳动',
-        '部门': ['销售部', '市场部'][idx - 1] || '技术部',
-        '日期': ['2026 年 6 月 28 日', '2026 年 6 月 29 日'][idx - 1] || '2026 年 6 月 30 日',
-        '时间': ['2026 年 6 月 28 日', '2026 年 6 月 29 日'][idx - 1] || '2026 年 6 月 30 日',
-        '地点': ['北京', '上海'][idx - 1] || '深圳',
-        '编号': ['NO.2026001', 'NO.2026002'][idx - 1] || 'NO.2026003',
-        '邮箱': ['zhang@example.com', 'li@example.com'][idx - 1] || 'wang@example.com',
-        '电话': ['13800000001', '13800000002'][idx - 1] || '13800000003',
-        '地址': ['北京市海淀区', '上海市浦东新区'][idx - 1] || '深圳市南山区',
-        '正文': generatedCopy || '（请先生成 AI 文案）',
-        '内容': generatedCopy || '（请先生成 AI 文案）',
-        '职位': ['前端开发工程师', '产品经理'][idx - 1] || 'UI 设计师',
-        '身份': ['嘉宾', '观众'][idx - 1] || '工作人员',
-        '受助对象': ['山区儿童', '困境老人'][idx - 1] || '残障群体'
+        '濮撳悕': ['寮犳檽鏄?, '鏉庨洩濠?][idx - 1] || '鐜嬫旦鐒?,
+        '鍚嶇О': ['寮犳檽鏄?, '鏉庨洩濠?][idx - 1] || '鐜嬫旦鐒?,
+        '濂栭」': ['2026 骞村害閿€鍞啝鍐?, '鏈€浣虫柊浜哄'][idx - 1] || '浼樼鍛樺伐',
+        '浜嬩欢': ['2026 骞村害閿€鍞啝鍐?, '鏈€浣虫柊浜哄'][idx - 1] || '浼樼鍛樺伐',
+        '鍗曚綅': ['瀛楄妭璺冲姩閿€鍞儴', '瀛楄妭璺冲姩甯傚満閮?][idx - 1] || '瀛楄妭璺冲姩',
+        '閮ㄩ棬': ['閿€鍞儴', '甯傚満閮?][idx - 1] || '鎶€鏈儴',
+        '鏃ユ湡': ['2026 骞?6 鏈?28 鏃?, '2026 骞?6 鏈?29 鏃?][idx - 1] || '2026 骞?6 鏈?30 鏃?,
+        '鏃堕棿': ['2026 骞?6 鏈?28 鏃?, '2026 骞?6 鏈?29 鏃?][idx - 1] || '2026 骞?6 鏈?30 鏃?,
+        '鍦扮偣': ['鍖椾含', '涓婃捣'][idx - 1] || '娣卞湷',
+        '缂栧彿': ['NO.2026001', 'NO.2026002'][idx - 1] || 'NO.2026003',
+        '閭': ['zhang@example.com', 'li@example.com'][idx - 1] || 'wang@example.com',
+        '鐢佃瘽': ['13800000001', '13800000002'][idx - 1] || '13800000003',
+        '鍦板潃': ['鍖椾含甯傛捣娣€鍖?, '涓婃捣甯傛郸涓滄柊鍖?][idx - 1] || '娣卞湷甯傚崡灞卞尯',
+        '姝ｆ枃': generatedCopy || '',
+        '鍐呭': generatedCopy || '',
+        '鑱屼綅': ['鍓嶇寮€鍙戝伐绋嬪笀', '浜у搧缁忕悊'][idx - 1] || 'UI 璁捐甯?,
+        '韬唤': ['鍢夊', '瑙備紬'][idx - 1] || '宸ヤ綔浜哄憳',
+        '鍙楀姪瀵硅薄': ['灞卞尯鍎跨', '鍥板鑰佷汉'][idx - 1] || '娈嬮殰缇や綋'
       };
-      return map[field] || `示例${field}${idx}`;
+      return map[field] || `绀轰緥${field}${idx}`;
     }
 
     function escapeHtml(str) {
@@ -725,7 +534,7 @@
     }
 
     document.getElementById('btn-add-row').addEventListener('click', () => {
-      const fields = detectedFields.length ? detectedFields : ['姓名','奖项','单位','日期'];
+      const fields = detectedFields.length ? detectedFields : ['濮撳悕','濂栭」','鍗曚綅','鏃ユ湡'];
       dataRows.push(fields.reduce((acc, f) => { acc[f] = sampleValue(f, dataRows.length + 1); return acc; }, {}));
       updateDataTable();
     });
@@ -745,25 +554,18 @@
     }
 
     function previewRow(index) {
-      if (!dataRows.length) return;
+      if (!dataRows.length) return showToast('璇峰厛娣诲姞鏁版嵁');
       const row = dataRows[Math.min(index, dataRows.length - 1)];
-      const isHonor = currentScene === 'honor' || currentScene === 'award' || currentScene === 'donation';
-      const html = `
-        <div class="${isHonor ? 'preview-honor' : 'preview-paper'} rounded-xl p-6 h-full min-h-[280px]">
-          <div class="border-b ${isHonor ? 'border-amber-200' : 'border-slate-100'} pb-3 mb-4">
-            <h3 class="text-lg font-bold ${isHonor ? 'text-amber-800' : 'text-slate-900'}">文档预览</h3>
-            <p class="text-xs ${isHonor ? 'text-amber-600' : 'text-slate-400'}">使用第 ${index + 1} 行数据</p>
-          </div>
-          <div class="${isHonor ? 'text-amber-900' : 'text-slate-800'} leading-loose text-base">${fillTemplate(row)}</div>
-        </div>
+      document.getElementById('preview-card').innerHTML = `
+        <h4>鏂囨。棰勮 <span class="text-xs font-normal text-slate-400">浣跨敤绗?${index + 1} 琛屾暟鎹?/span></h4>
+        <div class="text-base text-slate-800">${fillTemplate(row)}</div>
       `;
-      document.getElementById('preview-card').innerHTML = html;
     }
 
     document.getElementById('btn-preview').addEventListener('click', () => previewRow(0));
 
     document.getElementById('btn-download').addEventListener('click', () => {
-      if (!dataRows.length) return alert('请先添加数据');
+      if (!dataRows.length) return showToast('璇峰厛娣诲姞鏁版嵁');
       const row = dataRows[0];
       let text = document.getElementById('template-text').value || defaultTemplate;
       Object.keys(row).forEach(key => {
@@ -781,7 +583,7 @@
           }]
         });
         Packer.toBlob(doc).then(blob => {
-          saveAs(blob, 'AI批量文档生成示例.docx');
+          saveAs(blob, '鎵归噺鏂囨。鐢熸垚绀轰緥.docx');
         }).catch(err => {
           console.error(err);
           downloadTxt(text);
@@ -794,13 +596,15 @@
 
     function downloadTxt(text) {
       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      saveAs(blob, 'AI批量文档生成示例.txt');
+      saveAs(blob, '鎵归噺鏂囨。鐢熸垚绀轰緥.txt');
     }
 
     // Init
     renderSceneCards();
     updateExtraField();
     updateDataTable();
+    renderFields();
+    previewRow(0);
   </script>
 </body>
 </html>
