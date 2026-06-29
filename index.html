@@ -3,33 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>批量文档生成器 - 参赛版在线体验 Demo</title>
-  <meta name="description" content="批量文档生成器在线体验：一张模板 + 一份表格，一键生成千份证书、邀请函、通知等文档。" />
+  <title>批量文档生成器 - 参赛级在线体验 Demo</title>
+  <meta name="description" content="批量文档生成器在线体验：Word 模板框选标记 + Excel 数据智能填入 + 批量导出文档。零代码，参赛级设计。" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@400;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=LXGW+WenKai:wght@300;400;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
 
     :root {
-      --bg: #faf8f5;
-      --surface: #ffffff;
-      --ink: #1a1f2e;
-      --ink-2: #3d4558;
-      --muted: #6b7280;
-      --primary: #1e40af;
-      --primary-600: #1e3a8a;
-      --primary-50: #eff6ff;
-      --accent: #d97706;
-      --accent-600: #b45309;
-      --success: #059669;
-      --border: #e7e5e4;
-      --shadow: 0 1px 3px rgba(26,31,46,0.04), 0 12px 32px rgba(26,31,46,0.08);
-      --shadow-lg: 0 24px 60px rgba(26,31,46,0.14);
-      --radius: 24px;
-      --radius-sm: 16px;
+      --bg: #090d14;
+      --bg-2: #0f172a;
+      --surface: #111827;
+      --surface-glass: rgba(17, 24, 39, 0.72);
+      --ink: #f8fafc;
+      --ink-2: #cbd5e1;
+      --muted: #94a3b8;
+      --primary: #0e7490;
+      --primary-600: #155e75;
+      --primary-glow: rgba(14, 116, 144, 0.35);
+      --accent: #f59e0b;
+      --accent-600: #d97706;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --success: #34d399;
+      --border: rgba(148, 163, 184, 0.14);
+      --border-strong: rgba(148, 163, 184, 0.22);
+      --radius: 26px;
+      --radius-sm: 18px;
     }
 
     * { box-sizing: border-box; }
@@ -40,129 +42,193 @@
       font-family: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--ink-2);
-      line-height: 1.65;
+      line-height: 1.7;
       overflow-x: hidden;
     }
 
-    .font-display { font-family: 'Noto Serif SC', Georgia, serif; }
-    .font-sans { font-family: 'Noto Sans SC', system-ui, sans-serif; }
+    .font-display { font-family: 'LXGW WenKai', 'Noto Sans SC', serif; }
+    .font-serif-en { font-family: 'Cormorant Garamond', 'Times New Roman', serif; }
+    .font-body { font-family: 'Noto Sans SC', system-ui, sans-serif; }
 
-    /* Noise texture overlay */
+    /* Noise overlay */
     .noise {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 9999;
-      opacity: 0.025;
+      opacity: 0.035;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
     /* Hero */
     .hero-bg {
-      background:
-        radial-gradient(circle at 15% 20%, rgba(30, 64, 175, 0.18) 0%, transparent 45%),
-        radial-gradient(circle at 85% 80%, rgba(217, 119, 6, 0.16) 0%, transparent 45%),
-        linear-gradient(165deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
       position: relative;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(14, 116, 144, 0.22) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(245, 158, 11, 0.16) 0%, transparent 45%),
+        linear-gradient(180deg, #070a10 0%, #0b1220 40%, #0d1424 100%);
+      overflow: hidden;
     }
 
+    .aurora {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .aurora-layer {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.55;
+      animation: aurora-drift 22s ease-in-out infinite;
+    }
+    .aurora-layer:nth-child(1) {
+      width: 70vw; height: 70vw;
+      background: radial-gradient(circle, rgba(14,116,144,0.55), transparent 70%);
+      top: -25%; left: -15%;
+    }
+    .aurora-layer:nth-child(2) {
+      width: 60vw; height: 60vw;
+      background: radial-gradient(circle, rgba(56,189,248,0.35), transparent 70%);
+      bottom: -20%; right: -10%;
+      animation-delay: -8s;
+      animation-duration: 26s;
+    }
+    .aurora-layer:nth-child(3) {
+      width: 45vw; height: 45vw;
+      background: radial-gradient(circle, rgba(245,158,11,0.4), transparent 70%);
+      top: 35%; left: 45%;
+      animation-delay: -14s;
+      animation-duration: 20s;
+    }
+    @keyframes aurora-drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(40px, -30px) scale(1.06); }
+      50% { transform: translate(-25px, 25px) scale(0.96); }
+      75% { transform: translate(20px, 15px) scale(1.04); }
+    }
+
+    /* Particle canvas */
+    #particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Grid overlay */
     .hero-grid {
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 72px 72px;
-      mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-      -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
-    }
-
-    .hero-glow {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.28;
+        linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
       pointer-events: none;
-      animation: drift 20s ease-in-out infinite;
     }
 
-    @keyframes drift {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(30px, -30px) scale(1.1); }
-      66% { transform: translate(-20px, 20px) scale(0.95); }
+    /* 3D Document stack */
+    .doc-stage {
+      perspective: 1400px;
+      transform-style: preserve-3d;
     }
-
-    /* Document stack */
     .doc-stack {
       position: relative;
-      width: 360px;
-      height: 460px;
-      perspective: 1200px;
+      width: 420px;
+      height: 520px;
+      transform-style: preserve-3d;
+      animation: stack-breathe 8s ease-in-out infinite;
     }
-
+    @keyframes stack-breathe {
+      0%, 100% { transform: translateY(0) rotateY(-8deg); }
+      50% { transform: translateY(-14px) rotateY(-6deg); }
+    }
     .doc-sheet {
       position: absolute;
-      width: 280px;
-      height: 360px;
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 12px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 28px;
-      backdrop-filter: blur(4px);
+      width: 300px;
+      height: 400px;
+      border-radius: 16px;
+      padding: 32px;
       transform-style: preserve-3d;
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
     }
-
+    .doc-sheet::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .doc-sheet::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.22);
+      pointer-events: none;
+    }
     .doc-sheet:nth-child(1) {
       top: 0; right: 0;
-      transform: rotateY(-12deg) rotateX(8deg) translateZ(40px);
-      background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
-      animation: float1 7s ease-in-out infinite;
+      background: linear-gradient(160deg, #fff 0%, #f1f5f9 100%);
+      box-shadow:
+        0 40px 80px -20px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.1) inset;
+      transform: rotateY(-18deg) rotateX(10deg) translateZ(60px);
+      animation: sheet-float-1 7s ease-in-out infinite;
     }
     .doc-sheet:nth-child(2) {
-      top: 35px; right: 35px;
-      transform: rotateY(-8deg) rotateX(5deg) translateZ(20px);
-      background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
-      animation: float2 8s ease-in-out infinite;
+      top: 42px; right: 42px;
+      background: linear-gradient(160deg, #fffbf0 0%, #fef3c7 100%);
+      box-shadow:
+        0 35px 70px -18px rgba(0,0,0,0.48),
+        0 0 0 1px rgba(255,255,255,0.1) inset;
+      transform: rotateY(-12deg) rotateX(6deg) translateZ(30px);
+      animation: sheet-float-2 8s ease-in-out infinite;
     }
     .doc-sheet:nth-child(3) {
-      top: 70px; right: 70px;
-      transform: rotateY(-4deg) rotateX(2deg) translateZ(0px);
-      background: linear-gradient(135deg, #fff 0%, #dbeafe 100%);
-      animation: float3 9s ease-in-out infinite;
+      top: 84px; right: 84px;
+      background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 100%);
+      box-shadow:
+        0 30px 60px -15px rgba(0,0,0,0.42),
+        0 0 0 1px rgba(255,255,255,0.1) inset;
+      transform: rotateY(-6deg) rotateX(3deg) translateZ(0px);
+      animation: sheet-float-3 9s ease-in-out infinite;
     }
-
-    @keyframes float1 {
-      0%, 100% { transform: rotateY(-12deg) rotateX(8deg) translateZ(40px) translateY(0); }
-      50% { transform: rotateY(-10deg) rotateX(6deg) translateZ(40px) translateY(-15px); }
+    @keyframes sheet-float-1 {
+      0%, 100% { transform: rotateY(-18deg) rotateX(10deg) translateZ(60px) translateY(0); }
+      50% { transform: rotateY(-15deg) rotateX(8deg) translateZ(60px) translateY(-18px); }
     }
-    @keyframes float2 {
-      0%, 100% { transform: rotateY(-8deg) rotateX(5deg) translateZ(20px) translateY(0); }
-      50% { transform: rotateY(-6deg) rotateX(4deg) translateZ(20px) translateY(-20px); }
+    @keyframes sheet-float-2 {
+      0%, 100% { transform: rotateY(-12deg) rotateX(6deg) translateZ(30px) translateY(0); }
+      50% { transform: rotateY(-9deg) rotateX(5deg) translateZ(30px) translateY(-24px); }
     }
-    @keyframes float3 {
-      0%, 100% { transform: rotateY(-4deg) rotateX(2deg) translateZ(0px) translateY(0); }
-      50% { transform: rotateY(-2deg) rotateX(1deg) translateZ(0px) translateY(-12px); }
+    @keyframes sheet-float-3 {
+      0%, 100% { transform: rotateY(-6deg) rotateX(3deg) translateZ(0px) translateY(0); }
+      50% { transform: rotateY(-3deg) rotateX(2deg) translateZ(0px) translateY(-14px); }
     }
-
-    .doc-line { height: 8px; border-radius: 4px; margin-bottom: 14px; }
+    .doc-line { height: 9px; border-radius: 5px; margin-bottom: 16px; }
     .doc-line.wide { width: 100%; background: #e2e8f0; }
-    .doc-line.mid { width: 75%; background: #cbd5e1; }
-    .doc-line.short { width: 50%; background: #94a3b8; }
-    .doc-line.accent { width: 40%; background: linear-gradient(90deg, var(--primary), var(--accent)); height: 10px; }
+    .doc-line.mid { width: 72%; background: #cbd5e1; }
+    .doc-line.short { width: 48%; background: #94a3b8; }
+    .doc-line.accent { width: 36%; background: linear-gradient(90deg, var(--primary), var(--accent)); height: 11px; }
     .doc-stamp {
       position: absolute;
-      bottom: 28px; right: 28px;
-      width: 64px; height: 64px;
-      border: 3px solid var(--accent);
+      bottom: 32px; right: 32px;
+      width: 72px; height: 72px;
+      border: 3px solid var(--accent-600);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      color: var(--accent);
+      color: var(--accent-600);
       font-weight: 900;
-      font-size: 13px;
-      transform: rotate(-15deg);
-      opacity: 0.8;
+      font-size: 14px;
+      transform: rotate(-18deg);
+      opacity: 0.85;
+      box-shadow: 0 6px 18px rgba(245,158,11,0.18);
     }
 
     /* Buttons */
@@ -171,14 +237,14 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 14px 28px;
+      padding: 15px 30px;
       border-radius: 999px;
       font-weight: 700;
       color: #fff;
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
-      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      border: none;
+      background: linear-gradient(135deg, #0e7490 0%, #0891b2 50%, #0e7490 100%);
+      box-shadow: 0 4px 22px rgba(14, 116, 144, 0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255,255,255,0.12);
       cursor: pointer;
       position: relative;
       overflow: hidden;
@@ -187,46 +253,47 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-      transform: translateX(-100%);
-      transition: transform 0.6s;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+      transform: translateX(-110%);
+      transition: transform 0.7s;
     }
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45); }
-    .btn-primary:hover::before { transform: translateX(100%); }
+    .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 34px rgba(14, 116, 144, 0.55); }
+    .btn-primary:hover::before { transform: translateX(110%); }
+    .btn-primary:active { transform: translateY(-1px) scale(0.98); }
 
     .btn-secondary {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 22px;
+      padding: 13px 24px;
       border-radius: 999px;
       font-weight: 600;
       color: var(--ink-2);
-      background: #fff;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      transition: all 0.2s;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-strong);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
+      backdrop-filter: blur(8px);
     }
-    .btn-secondary:hover { border-color: #94a3b8; background: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.28); transform: translateY(-2px); }
 
     .btn-ghost {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 24px;
+      padding: 13px 26px;
       border-radius: 999px;
       font-weight: 600;
-      color: #fff;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      transition: all 0.2s;
+      color: var(--ink);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      transition: all 0.25s;
       cursor: pointer;
       backdrop-filter: blur(8px);
     }
-    .btn-ghost:hover { background: rgba(255,255,255,0.14); transform: translateY(-2px); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
 
     .btn-accent {
       display: inline-flex;
@@ -236,85 +303,134 @@
       padding: 14px 28px;
       border-radius: 999px;
       font-weight: 700;
-      color: #fff;
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);
-      transition: all 0.2s;
+      color: #0f172a;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      box-shadow: 0 4px 22px rgba(245, 158, 11, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       border: none;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
-    .btn-accent:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(245, 158, 11, 0.45); }
+    .btn-accent::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: translateX(-110%);
+      transition: transform 0.7s;
+    }
+    .btn-accent:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 34px rgba(245, 158, 11, 0.5); }
+    .btn-accent:hover::before { transform: translateX(110%); }
+    .btn-accent:active { transform: translateY(-1px) scale(0.98); }
 
-    /* Cards */
+    .btn-danger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); transform: translateY(-2px); }
+
+    /* Glass card */
     .card {
-      background: var(--surface);
+      background: var(--surface-glass);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+      position: relative;
+      overflow: hidden;
     }
-    .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
-    .card-hover:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 50%, rgba(255,255,255,0.04));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .card-hover {
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+    }
+    .card-hover:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.45), 0 0 40px rgba(14,116,144,0.08);
+    }
 
     /* Inputs */
     .input {
       width: 100%;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
-      padding: 14px 16px;
+      padding: 14px 18px;
       outline: none;
       transition: all 0.2s;
-      background: #fff;
+      background: rgba(255,255,255,0.04);
       color: var(--ink);
       font-size: 15px;
     }
-    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(30,64,175,0.08); }
+    .input::placeholder { color: #64748b; }
+    .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(14,116,144,0.12); background: rgba(255,255,255,0.07); }
 
     .textarea {
-      min-height: 240px;
+      min-height: 260px;
       resize: vertical;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 14px;
-      line-height: 1.7;
-      background: #fafaf9;
+      line-height: 1.75;
+      background: rgba(255,255,255,0.03);
     }
 
     /* Tags */
     .tag {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      gap: 8px;
+      padding: 8px 16px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-      color: var(--primary-600);
+      background: linear-gradient(135deg, rgba(14,116,144,0.18) 0%, rgba(14,116,144,0.08) 100%);
+      color: #67e8f9;
       font-size: 13px;
       font-weight: 700;
-      border: 1px solid #bfdbfe;
+      border: 1px solid rgba(103, 232, 249, 0.18);
       animation: popIn 0.3s ease;
-      box-shadow: 0 2px 6px rgba(30,64,175,0.08);
+      box-shadow: 0 2px 10px rgba(14,116,144,0.1);
     }
     @keyframes popIn {
       from { transform: scale(0.85); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    .tag button { color: #93c5fd; font-size: 16px; line-height: 1; transition: color 0.15s; }
-    .tag button:hover { color: #ef4444; }
+    .tag button { color: #22d3ee; font-size: 16px; line-height: 1; transition: color 0.15s; }
+    .tag button:hover { color: #f87171; }
 
     /* Data table */
     table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
     table.data-table th {
-      background: #f5f5f4;
+      background: rgba(255,255,255,0.06);
       text-align: left;
       padding: 14px 16px;
       font-weight: 700;
-      color: var(--ink-2);
+      color: var(--ink);
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
       position: sticky;
       top: 0;
       z-index: 1;
     }
-    table.data-table td { padding: 10px 16px; border-bottom: 1px solid #f1f5f9; }
+    table.data-table td { padding: 10px 16px; border-bottom: 1px solid rgba(148,163,184,0.08); }
     table.data-table tr:last-child td { border-bottom: none; }
     table.data-table input {
       width: 100%;
@@ -323,20 +439,20 @@
       padding: 8px 0;
       outline: none;
       font-size: 14px;
-      color: var(--ink);
+      color: var(--ink-2);
     }
-    table.data-table input:focus { background: #eff6ff; border-radius: 6px; padding-left: 10px; padding-right: 10px; }
+    table.data-table input:focus { background: rgba(14,116,144,0.12); border-radius: 6px; padding-left: 10px; padding-right: 10px; color: var(--ink); }
 
     /* Preview paper */
     .preview-paper {
       background: #fff;
-      border: 1px solid #e7e5e4;
+      border: 1px solid rgba(148,163,184,0.12);
       border-radius: var(--radius-sm);
-      min-height: 340px;
-      padding: 40px;
+      min-height: 360px;
+      padding: 42px;
       line-height: 2;
-      color: var(--ink);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+      color: #1e293b;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       position: relative;
     }
     .preview-paper::before {
@@ -347,7 +463,7 @@
       background: linear-gradient(90deg, var(--primary), var(--accent));
       border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     }
-    .preview-paper h4 { font-size: 22px; font-weight: 800; margin-bottom: 20px; color: var(--ink); border-bottom: 1px solid #e7e5e4; padding-bottom: 14px; }
+    .preview-paper h4 { font-size: 22px; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; }
 
     /* Scene chips */
     .scene-chip {
@@ -356,19 +472,35 @@
       gap: 6px;
       padding: 10px 16px;
       border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #fff;
+      border: 1px solid var(--border-strong);
+      background: rgba(255,255,255,0.04);
       color: var(--ink-2);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
-    .scene-chip:hover, .scene-chip.active { border-color: var(--primary); background: var(--primary-50); color: var(--primary-600); }
+    .scene-chip:hover, .scene-chip.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(245,158,11,0.14), rgba(245,158,11,0.05));
+      color: #fbbf24;
+      box-shadow: 0 4px 14px rgba(245,158,11,0.12);
+    }
 
     /* Section titles */
-    .section-title { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-    .section-title .num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 10px rgba(30,64,175,0.25); }
+    .section-title { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 26px; display: flex; align-items: center; gap: 14px; }
+    .section-title .num {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #22d3ee);
+      color: #fff;
+      font-size: 15px;
+      display: flex; align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex-shrink: 0;
+      box-shadow: 0 6px 16px rgba(14,116,144,0.35);
+    }
 
     /* Toast */
     .toast {
@@ -376,16 +508,18 @@
       bottom: 28px;
       left: 50%;
       transform: translateX(-50%) translateY(120px);
-      background: var(--ink);
+      background: rgba(15, 23, 42, 0.92);
       color: #fff;
-      padding: 14px 28px;
+      padding: 14px 30px;
       border-radius: 999px;
       font-size: 14px;
       font-weight: 600;
       opacity: 0;
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
     }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
@@ -393,21 +527,24 @@
       display: inline-block;
       padding: 4px 12px;
       border-radius: 999px;
-      background: #f1f5f9;
-      color: var(--muted);
+      background: rgba(245,158,11,0.12);
+      color: #fbbf24;
       font-size: 12px;
       font-weight: 700;
       margin-left: 10px;
+      border: 1px solid rgba(245,158,11,0.2);
     }
 
     [hidden] { display: none !important; }
 
     /* Scroll reveal */
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
     .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-scale { opacity: 0; transform: scale(0.92); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
 
     /* Stats */
-    .stat-number { font-family: 'Noto Serif SC', Georgia, serif; font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .stat-number { font-family: 'Cormorant Garamond', 'LXGW WenKai', serif; font-size: 3.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
 
     /* Pulse dot */
     .pulse-dot {
@@ -415,48 +552,48 @@
       height: 8px;
       border-radius: 50%;
       background: var(--success);
-      box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
       animation: pulse-green 2s infinite;
     }
     @keyframes pulse-green {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(5, 150, 105, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
     }
 
     /* Nav glass */
     .nav-glass {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(231, 229, 228, 0.8);
+      background: rgba(9, 13, 20, 0.78);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
     /* AI panel */
     .ai-panel-toggle {
       width: 100%;
-      padding: 24px 28px;
+      padding: 26px 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(90deg, #fafaf9, #fff);
+      background: linear-gradient(90deg, rgba(124,58,237,0.08), rgba(255,255,255,0.02));
       border: none;
       cursor: pointer;
       text-align: left;
     }
 
-    /* Scene icon cards */
+    /* Scene cards */
     .scene-card {
-      padding: 24px;
+      padding: 28px 22px;
       border-radius: var(--radius-sm);
-      background: #fff;
+      background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
-      transition: all 0.3s;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
       overflow: hidden;
     }
@@ -467,32 +604,53 @@
       background: linear-gradient(90deg, var(--primary), var(--accent));
       transform: scaleX(0);
       transform-origin: left;
-      transition: transform 0.3s;
+      transition: transform 0.35s;
     }
-    .scene-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .scene-card:hover {
+      border-color: rgba(245,158,11,0.35);
+      transform: translateY(-7px) scale(1.02);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35), 0 0 30px rgba(245,158,11,0.08);
+      background: rgba(255,255,255,0.07);
+    }
     .scene-card:hover::before { transform: scaleX(1); }
-    .scene-card .icon { font-size: 36px; margin-bottom: 14px; transition: transform 0.3s; }
-    .scene-card:hover .icon { transform: scale(1.15); }
+    .scene-card .icon { font-size: 40px; margin-bottom: 16px; transition: transform 0.35s; }
+    .scene-card:hover .icon { transform: scale(1.2) rotate(-6deg); }
     .scene-card h4 { font-weight: 800; color: var(--ink); margin-bottom: 6px; font-size: 16px; }
     .scene-card p { font-size: 13px; color: var(--muted); }
 
-    /* Before/After */
+    /* Before/After cards */
     .pain-card {
-      background: #fff;
-      border: 1px solid #fecaca;
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.15);
       border-radius: var(--radius-sm);
-      padding: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pain-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(180deg, #f87171, #ef4444);
     }
     .gain-card {
-      background: #fff;
-      border: 1px solid #bbf7d0;
+      background: rgba(52, 211, 153, 0.05);
+      border: 1px solid rgba(52, 211, 153, 0.15);
       border-radius: var(--radius-sm);
-      padding: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .gain-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(180deg, #34d399, #10b981);
     }
 
     /* Gradient text */
     .text-gradient {
-      background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 30%, #ffffff 50%, #fcd34d 70%, #fbbf24 100%);
+      background: linear-gradient(135deg, #67e8f9 0%, #a5f3fc 30%, #ffffff 48%, #fcd34d 68%, #fbbf24 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -500,38 +658,92 @@
 
     /* Feature icon */
     .feature-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
+      width: 54px; height: 54px;
+      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      background: linear-gradient(135deg, #eff6ff, #dbeafe);
-      margin-bottom: 16px;
+      font-size: 26px;
+      background: linear-gradient(135deg, rgba(14,116,144,0.18), rgba(14,116,144,0.06));
+      margin-bottom: 18px;
+      border: 1px solid rgba(14,116,144,0.16);
     }
 
-    /* Step tabs for workspace */
+    /* Step tabs */
     .step-tab {
       display: flex; align-items: center; gap: 10px;
-      padding: 12px 18px;
+      padding: 12px 20px;
       border-radius: 999px;
       font-weight: 700;
       font-size: 14px;
       color: var(--muted);
       background: transparent;
       border: 1px solid transparent;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
     .step-tab.active {
-      color: var(--primary-600);
-      background: #eff6ff;
-      border-color: #bfdbfe;
+      color: #67e8f9;
+      background: rgba(14,116,144,0.12);
+      border-color: rgba(103,232,249,0.2);
+      box-shadow: 0 4px 16px rgba(14,116,144,0.12);
     }
     .step-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 
+    /* Gradient border utility */
+    .gradient-border {
+      position: relative;
+      background: var(--surface);
+      border-radius: var(--radius);
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.16), transparent 55%, rgba(245,158,11,0.18));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Orbit decoration */
+    .orbit {
+      position: absolute;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .orbit-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px var(--accent);
+    }
+
+    /* Entrance animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
+
+    /* Magnetic button helper */
+    .magnetic-wrap { display: inline-block; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    /* Responsive */
     @media (max-width: 1024px) {
-      .doc-stack { transform: scale(0.75); margin-top: 40px; }
+      .doc-stack { transform: scale(0.72); margin-top: 50px; }
     }
     @media (max-width: 768px) {
-      .doc-stack { transform: scale(0.55); margin-top: 20px; }
+      .doc-stack { transform: scale(0.52); margin-top: 30px; }
+      .stat-number { font-size: 2.6rem; }
+      .section-title { font-size: 18px; }
     }
   </style>
 </head>
@@ -540,133 +752,156 @@
 
   <!-- Nav -->
   <nav class="nav-glass fixed top-0 left-0 right-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-2.5 font-bold text-slate-900 text-lg">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-800 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 font-bold text-white text-lg">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-700 to-blue-900 flex items-center justify-center text-white shadow-lg shadow-cyan-900/40">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
-        批量文档生成器
+        <span class="font-display">批量文档生成器</span>
       </a>
       <div class="flex items-center gap-6">
-        <a href="#how-it-works" class="hidden sm:block text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">原理</a>
-        <a href="#scenes" class="hidden sm:block text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">场景</a>
+        <a href="#how-it-works" class="hidden sm:block text-sm font-semibold text-slate-400 hover:text-white transition-colors">原理</a>
+        <a href="#scenes" class="hidden sm:block text-sm font-semibold text-slate-400 hover:text-white transition-colors">场景</a>
         <a href="#workspace" class="btn-primary text-sm py-2.5 px-5">立即体验</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero -->
-  <header class="hero-bg text-white pt-32 pb-24 md:pt-44 md:pb-32 overflow-hidden relative">
+  <header class="hero-bg text-white min-h-screen pt-32 pb-24 md:pt-44 md:pb-32 overflow-hidden relative flex items-center">
+    <div class="aurora">
+      <div class="aurora-layer"></div>
+      <div class="aurora-layer"></div>
+      <div class="aurora-layer"></div>
+    </div>
+    <canvas id="particles"></canvas>
     <div class="hero-grid"></div>
-    <div class="hero-glow w-[500px] h-[500px] bg-blue-600 top-[-15%] right-[5%]"></div>
-    <div class="hero-glow w-[400px] h-[400px] bg-amber-500 bottom-[-10%] left-[-5%]" style="animation-delay: -7s;"></div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-      <div class="grid lg:grid-cols-2 gap-12 items-center">
-        <div class="max-w-2xl">
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-sm text-blue-100 mb-8 backdrop-blur-sm reveal">
+    <!-- Orbits decoration -->
+    <div class="orbit w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:block" style="animation: spin 60s linear infinite;">
+      <div class="orbit-dot" style="top: 0; left: 50%; transform: translate(-50%, -50%);"></div>
+    </div>
+    <div class="orbit w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:block" style="animation: spin 80s linear infinite reverse;">
+      <div class="orbit-dot" style="bottom: 0; left: 50%; transform: translate(-50%, 50%); background: #22d3ee; box-shadow: 0 0 14px #22d3ee;"></div>
+    </div>
+    <style>
+      @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+    </style>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 w-full">
+      <div class="grid lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-7 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/8 border border-white/12 text-sm text-cyan-100 mb-8 backdrop-blur-sm animate-fade-up">
             <span class="pulse-dot"></span>
             TRAE AI 创造力大赛 · 学习工作 / 社会公益
           </div>
-          <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-8 reveal">
+          <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.12] mb-8 animate-fade-up delay-100">
             告别重复排版<br />
             <span class="text-gradient">批量生成千份文档</span>
           </h1>
-          <p class="text-lg md:text-xl text-slate-300 mb-10 leading-relaxed max-w-xl reveal" style="transition-delay: 100ms;">
+          <p class="text-lg md:text-xl text-slate-300 mb-10 leading-relaxed max-w-xl animate-fade-up delay-200">
             在 Word 模板中标记替换位置，粘贴 Excel 数据，每一行自动生成一份专业文档。无需代码、无需联网，3 分钟上手。
           </p>
-          <div class="flex flex-wrap items-center gap-4 reveal" style="transition-delay: 200ms;">
-            <a href="#workspace" class="btn-primary text-base">
+          <div class="flex flex-wrap items-center gap-4 animate-fade-up delay-300">
+            <a href="#workspace" class="btn-primary text-base magnetic-wrap">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               开始制作
             </a>
-            <a href="#how-it-works" class="btn-ghost text-base">
+            <a href="#how-it-works" class="btn-ghost text-base magnetic-wrap">
               了解工作原理
             </a>
           </div>
 
-          <div class="flex items-center gap-8 mt-12 reveal" style="transition-delay: 300ms;">
+          <div class="flex flex-wrap items-center gap-6 mt-14 animate-fade-up delay-400">
             <div>
-              <div class="text-2xl font-bold font-display">10+</div>
-              <div class="text-sm text-slate-400">适用场景</div>
+              <div class="stat-number">10+</div>
+              <div class="text-sm text-slate-400 mt-1">适用场景</div>
             </div>
-            <div class="w-px h-10 bg-white/15"></div>
+            <div class="w-px h-12 bg-white/12 hidden sm:block"></div>
             <div>
-              <div class="text-2xl font-bold font-display">1000+</div>
-              <div class="text-sm text-slate-400">单次批量生成</div>
+              <div class="stat-number">1000+</div>
+              <div class="text-sm text-slate-400 mt-1">单次批量生成</div>
             </div>
-            <div class="w-px h-10 bg-white/15"></div>
+            <div class="w-px h-12 bg-white/12 hidden sm:block"></div>
             <div>
-              <div class="text-2xl font-bold font-display">0</div>
-              <div class="text-sm text-slate-400">代码基础要求</div>
+              <div class="stat-number">0</div>
+              <div class="text-sm text-slate-400 mt-1">代码基础要求</div>
             </div>
           </div>
         </div>
 
-        <div class="hidden lg:flex justify-center reveal" style="transition-delay: 200ms;">
-          <div class="doc-stack">
-            <div class="doc-sheet">
-              <div class="doc-line accent"></div>
-              <div class="doc-line wide"></div>
-              <div class="doc-line mid"></div>
-              <div class="doc-line short"></div>
-              <div class="doc-line wide"></div>
-              <div class="doc-line mid"></div>
-              <div class="doc-stamp">优秀<br>员工</div>
-            </div>
-            <div class="doc-sheet">
-              <div class="doc-line accent"></div>
-              <div class="doc-line wide"></div>
-              <div class="doc-line mid"></div>
-              <div class="doc-line short"></div>
-              <div class="doc-line wide"></div>
-              <div class="doc-stamp">邀请<br>函</div>
-            </div>
-            <div class="doc-sheet">
-              <div class="doc-line accent"></div>
-              <div class="doc-line wide"></div>
-              <div class="doc-line mid"></div>
-              <div class="doc-line short"></div>
-              <div class="doc-stamp">通知</div>
+        <div class="hidden lg:flex lg:col-span-5 justify-center animate-fade-up delay-300">
+          <div class="doc-stage">
+            <div class="doc-stack">
+              <div class="doc-sheet">
+                <div class="doc-line accent"></div>
+                <div class="doc-line wide"></div>
+                <div class="doc-line mid"></div>
+                <div class="doc-line short"></div>
+                <div class="doc-line wide"></div>
+                <div class="doc-line mid"></div>
+                <div class="doc-stamp">优秀<br>员工</div>
+              </div>
+              <div class="doc-sheet">
+                <div class="doc-line accent"></div>
+                <div class="doc-line wide"></div>
+                <div class="doc-line mid"></div>
+                <div class="doc-line short"></div>
+                <div class="doc-line wide"></div>
+                <div class="doc-stamp">邀请<br>函</div>
+              </div>
+              <div class="doc-sheet">
+                <div class="doc-line accent"></div>
+                <div class="doc-line wide"></div>
+                <div class="doc-line mid"></div>
+                <div class="doc-line short"></div>
+                <div class="doc-stamp">通知</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Scroll hint -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce hidden md:flex">
+      <span class="text-xs text-slate-400">向下滚动</span>
+      <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+    </div>
   </header>
 
   <!-- Pain / Gain -->
-  <section class="py-20 md:py-28">
+  <section class="py-24 md:py-32 relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <div class="text-center max-w-2xl mx-auto mb-16 reveal">
-        <span class="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-bold mb-4">效率痛点</span>
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">为什么需要批量文档生成器？</h2>
-        <p class="text-slate-500 text-lg">一份模板，千次复制粘贴，不仅枯燥，还容易出错。把重复劳动交给工具，把时间留给更重要的事。</p>
+        <span class="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-300 text-sm font-bold mb-5 border border-amber-500/20">效率痛点</span>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5">为什么需要批量文档生成器？</h2>
+        <p class="text-slate-400 text-lg">一份模板，千次复制粘贴，不仅枯燥，还容易出错。把重复劳动交给工具，把时间留给更重要的事。</p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-8">
         <div class="pain-card reveal">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold">✕</div>
-            <h3 class="text-lg font-bold text-slate-900">传统做法</h3>
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-11 h-11 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center font-bold text-lg border border-red-500/20">✕</div>
+            <h3 class="text-xl font-bold text-white">传统做法</h3>
           </div>
-          <ul class="space-y-3 text-slate-600">
-            <li class="flex items-start gap-3"><span class="text-red-400 mt-1">•</span> 手动复制粘贴，一份文档修改 5 分钟</li>
-            <li class="flex items-start gap-3"><span class="text-red-400 mt-1">•</span> 人名、日期、奖项容易填错</li>
-            <li class="flex items-start gap-3"><span class="text-red-400 mt-1">•</span> 成百上千份文件排版不统一</li>
-            <li class="flex items-start gap-3"><span class="text-red-400 mt-1">•</span> 活动前一天加班赶工</li>
+          <ul class="space-y-4 text-slate-300">
+            <li class="flex items-start gap-3"><span class="text-red-400 mt-1.5">•</span> 手动复制粘贴，一份文档修改 5 分钟</li>
+            <li class="flex items-start gap-3"><span class="text-red-400 mt-1.5">•</span> 人名、日期、奖项容易填错</li>
+            <li class="flex items-start gap-3"><span class="text-red-400 mt-1.5">•</span> 成百上千份文件排版不统一</li>
+            <li class="flex items-start gap-3"><span class="text-red-400 mt-1.5">•</span> 活动前一天加班赶工</li>
           </ul>
         </div>
-        <div class="gain-card reveal" style="transition-delay: 100ms;">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">✓</div>
-            <h3 class="text-lg font-bold text-slate-900">使用批量文档生成器</h3>
+        <div class="gain-card reveal" style="transition-delay: 120ms;">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-11 h-11 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/20">✓</div>
+            <h3 class="text-xl font-bold text-white">使用批量文档生成器</h3>
           </div>
-          <ul class="space-y-3 text-slate-600">
-            <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">•</span> 模板 + 表格，3 步批量生成</li>
-            <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">•</span> 数据来自表格，从根本上避免错漏</li>
-            <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">•</span> 每份文档格式统一、专业美观</li>
-            <li class="flex items-start gap-3"><span class="text-emerald-500 mt-1">•</span> 1 个人 10 分钟完成原本半天的工作</li>
+          <ul class="space-y-4 text-slate-300">
+            <li class="flex items-start gap-3"><span class="text-emerald-400 mt-1.5">•</span> 模板 + 表格，3 步批量生成</li>
+            <li class="flex items-start gap-3"><span class="text-emerald-400 mt-1.5">•</span> 数据来自表格，从根本上避免错漏</li>
+            <li class="flex items-start gap-3"><span class="text-emerald-400 mt-1.5">•</span> 每份文档格式统一、专业美观</li>
+            <li class="flex items-start gap-3"><span class="text-emerald-400 mt-1.5">•</span> 1 个人 10 分钟完成原本半天的工作</li>
           </ul>
         </div>
       </div>
@@ -674,59 +909,60 @@
   </section>
 
   <!-- How it works -->
-  <section id="how-it-works" class="py-20 md:py-28 bg-white border-y border-stone-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div class="text-center max-w-2xl mx-auto mb-16 reveal">
-        <span class="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-bold mb-4">极简工作流</span>
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">三步，从模板到成批文档</h2>
-        <p class="text-slate-500 text-lg">不需要学习成本，像填表一样完成批量文档制作。</p>
+  <section id="how-it-works" class="py-24 md:py-32 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center max-w-2xl mx-auto mb-20 reveal">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/10 text-cyan-300 text-sm font-bold mb-5 border border-cyan-500/20">极简工作流</span>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5">三步，从模板到成批文档</h2>
+        <p class="text-slate-400 text-lg">不需要学习成本，像填表一样完成批量文档制作。</p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-8">
         <div class="card card-hover p-8 reveal">
           <div class="feature-icon">📄</div>
-          <div class="text-sm font-bold text-blue-600 mb-2">步骤 1</div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">准备模板</h3>
-          <p class="text-slate-500 leading-relaxed">输入带 {{占位符}} 的模板，或上传 Word / Excel，系统自动识别可替换字段。</p>
+          <div class="text-sm font-bold text-cyan-300 mb-3 font-serif-en tracking-wide">STEP 01</div>
+          <h3 class="text-2xl font-bold text-white mb-4 font-display">准备模板</h3>
+          <p class="text-slate-400 leading-relaxed">输入带 {{占位符}} 的模板，或上传 Word / Excel，系统自动识别可替换字段。</p>
         </div>
-        <div class="card card-hover p-8 reveal" style="transition-delay: 100ms;">
+        <div class="card card-hover p-8 reveal" style="transition-delay: 120ms;">
           <div class="feature-icon">📊</div>
-          <div class="text-sm font-bold text-blue-600 mb-2">步骤 2</div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">填入数据</h3>
-          <p class="text-slate-500 leading-relaxed">粘贴表格数据，每一行对应一份独立文档，支持在线增删改查。</p>
+          <div class="text-sm font-bold text-cyan-300 mb-3 font-serif-en tracking-wide">STEP 02</div>
+          <h3 class="text-2xl font-bold text-white mb-4 font-display">填入数据</h3>
+          <p class="text-slate-400 leading-relaxed">粘贴表格数据，每一行对应一份独立文档，支持在线增删改查。</p>
         </div>
-        <div class="card card-hover p-8 reveal" style="transition-delay: 200ms;">
+        <div class="card card-hover p-8 reveal" style="transition-delay: 240ms;">
           <div class="feature-icon">🚀</div>
-          <div class="text-sm font-bold text-blue-600 mb-2">步骤 3</div>
-          <h3 class="text-xl font-bold text-slate-900 mb-3">批量导出</h3>
-          <p class="text-slate-500 leading-relaxed">一键导出 Word 文档，完整桌面版更支持 ZIP 打包与邮件发送。</p>
+          <div class="text-sm font-bold text-cyan-300 mb-3 font-serif-en tracking-wide">STEP 03</div>
+          <h3 class="text-2xl font-bold text-white mb-4 font-display">批量导出</h3>
+          <p class="text-slate-400 leading-relaxed">一键导出 Word 文档，完整桌面版更支持 ZIP 打包与邮件发送。</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Core Workspace -->
-  <section id="workspace" class="py-20 md:py-28">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div class="text-center max-w-2xl mx-auto mb-12 reveal">
-        <span class="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-bold mb-4">在线体验</span>
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">现在就开始制作</h2>
-        <p class="text-slate-500 text-lg">点击下方「加载示例」即可在 30 秒内看到完整效果。</p>
+  <section id="workspace" class="py-24 md:py-32 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center max-w-2xl mx-auto mb-14 reveal">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-300 text-sm font-bold mb-5 border border-amber-500/20">在线体验</span>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5">现在就开始制作</h2>
+        <p class="text-slate-400 text-lg">点击下方「加载示例」即可在 30 秒内看到完整效果。</p>
       </div>
 
-      <div class="flex flex-wrap justify-center gap-3 mb-10 reveal">
+      <div class="flex flex-wrap justify-center gap-3 mb-12 reveal">
         <div class="step-tab active"><span class="dot"></span> 1. 准备模板</div>
         <div class="step-tab"><span class="dot"></span> 2. 填入数据</div>
         <div class="step-tab"><span class="dot"></span> 3. 预览导出</div>
       </div>
 
       <!-- Step 1: Template -->
-      <div class="card p-6 md:p-8 mb-8 reveal">
-        <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-400 ml-2">输入带占位符的模板，或上传 Word / Excel 自动识别</span></div>
-        <div class="grid lg:grid-cols-3 gap-6">
+      <div class="card p-6 md:p-10 mb-10 reveal">
+        <div class="section-title"><span class="num">1</span> 准备模板 <span class="text-sm font-normal text-slate-400 ml-2 hidden sm:inline">输入带占位符的模板，或上传 Word / Excel 自动识别</span></div>
+        <div class="grid lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2">
             <textarea id="template-text" class="input textarea" placeholder="例如：&#10;尊敬的{{姓名}}：&#10;&#10;恭喜您荣获“{{奖项}}”！&#10;颁奖单位：{{单位}}&#10;日期：{{日期}}&#10;&#10;{{正文}}"></textarea>
-            <div class="flex flex-wrap items-center gap-3 mt-4">
+            <div class="flex flex-wrap items-center gap-3 mt-5">
               <button id="btn-load-example" class="btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 加载示例
@@ -737,18 +973,18 @@
                 <input id="template-file" type="file" accept=".docx,.xlsx,.xls" class="hidden" />
               </label>
               <button id="btn-detect" class="btn-secondary">识别字段</button>
-              <button id="btn-clear-fields" class="btn-secondary text-red-600 hover:text-red-700 hover:bg-red-50">清空字段</button>
-              <span id="file-name" class="text-xs text-slate-400"></span>
+              <button id="btn-clear-fields" class="btn-danger">清空字段</button>
+              <span id="file-name" class="text-xs text-slate-500"></span>
             </div>
           </div>
           <div>
-            <div class="bg-stone-50 rounded-2xl p-5 border border-stone-200 h-full">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-bold text-slate-700">识别到的字段</span>
-                <span id="field-count" class="text-xs font-bold text-slate-400 bg-white px-2.5 py-1 rounded-full border border-stone-200">0 个</span>
+            <div class="bg-slate-800/40 rounded-2xl p-6 border border-white/8 h-full">
+              <div class="flex items-center justify-between mb-5">
+                <span class="text-sm font-bold text-slate-200">识别到的字段</span>
+                <span id="field-count" class="text-xs font-bold text-slate-400 bg-slate-900/60 px-3 py-1 rounded-full border border-white/8">0 个</span>
               </div>
               <div id="fields-container" class="flex flex-wrap gap-2 min-h-[120px]">
-                <span class="text-sm text-slate-400">在模板中使用 {{字段名}} 标记替换位置，点击「识别字段」即可看到结果。</span>
+                <span class="text-sm text-slate-500">在模板中使用 {{字段名}} 标记替换位置，点击「识别字段」即可看到结果。</span>
               </div>
             </div>
           </div>
@@ -756,12 +992,12 @@
       </div>
 
       <!-- Step 2 & 3: Data + Preview -->
-      <div class="card p-6 md:p-8 mb-8 reveal">
-        <div class="grid lg:grid-cols-2 gap-8">
+      <div class="card p-6 md:p-10 mb-10 reveal">
+        <div class="grid lg:grid-cols-2 gap-10">
           <!-- Data -->
           <div>
-            <div class="section-title"><span class="num">2</span> 填入数据 <span class="text-sm font-normal text-slate-400 ml-2">每一行对应一份文档</span></div>
-            <div class="overflow-auto rounded-2xl border border-stone-200 mb-4 bg-white" style="max-height: 360px;">
+            <div class="section-title"><span class="num">2</span> 填入数据 <span class="text-sm font-normal text-slate-400 ml-2 hidden sm:inline">每一行对应一份文档</span></div>
+            <div class="overflow-auto rounded-2xl border border-white/8 mb-4 bg-slate-900/30" style="max-height: 380px;">
               <table class="data-table">
                 <thead><tr id="data-head"><th>字段</th></tr></thead>
                 <tbody id="data-body"></tbody>
@@ -772,9 +1008,9 @@
           <!-- Preview -->
           <div>
             <div class="section-title"><span class="num">3</span> 预览 & 导出</div>
-            <div id="preview-card" class="preview-paper mb-4">
+            <div id="preview-card" class="preview-paper mb-5">
               <h4>文档预览</h4>
-              <div class="text-slate-400 text-sm py-10 text-center">填写模板和数据后，点击「预览」查看生成效果</div>
+              <div class="text-slate-400 text-sm py-12 text-center">填写模板和数据后，点击「预览」查看生成效果</div>
             </div>
             <div class="flex gap-3">
               <button id="btn-preview" class="btn-secondary flex-1">预览第一行</button>
@@ -790,15 +1026,16 @@
   </section>
 
   <!-- Scenes -->
-  <section id="scenes" class="py-20 md:py-28 bg-white border-y border-stone-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div class="text-center max-w-2xl mx-auto mb-14 reveal">
-        <span class="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-bold mb-4">广泛适用</span>
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">这些场景都能批量搞定</h2>
-        <p class="text-slate-500 text-lg">从企业内部到公益活动，从个人学习到大型会议，一个工具覆盖多种文书需求。</p>
+  <section id="scenes" class="py-24 md:py-32 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-amber-900/5 via-transparent to-transparent pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-300 text-sm font-bold mb-5 border border-indigo-500/20">广泛适用</span>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5">这些场景都能批量搞定</h2>
+        <p class="text-slate-400 text-lg">从企业内部到公益活动，从个人学习到大型会议，一个工具覆盖多种文书需求。</p>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 reveal">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-5 reveal">
         <div class="scene-card text-center"><div class="icon">🏆</div><h4>荣誉证书</h4><p>优秀员工 / 奖状</p></div>
         <div class="scene-card text-center"><div class="icon">📩</div><h4>邀请函</h4><p>会议 / 活动邀请</p></div>
         <div class="scene-card text-center"><div class="icon">📢</div><h4>通知公告</h4><p>内部 / 活动通知</p></div>
@@ -814,38 +1051,38 @@
   </section>
 
   <!-- Optional AI Copy -->
-  <section id="ai-copy" class="py-20 md:py-28">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-      <div class="text-center max-w-2xl mx-auto mb-10 reveal">
-        <span class="inline-block px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-sm font-bold mb-4">可选增强</span>
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-slate-900 mb-4">AI 文案助手</h2>
-        <p class="text-slate-500 text-lg">不会写正文？选择场景，一键生成正式文案并填入模板。</p>
+  <section id="ai-copy" class="py-24 md:py-32 relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center max-w-2xl mx-auto mb-12 reveal">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-violet-500/10 text-violet-300 text-sm font-bold mb-5 border border-violet-500/20">可选增强</span>
+        <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5">AI 文案助手</h2>
+        <p class="text-slate-400 text-lg">不会写正文？选择场景，一键生成正式文案并填入模板。</p>
       </div>
 
       <div class="card overflow-hidden reveal">
         <button id="ai-toggle" class="ai-panel-toggle">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-violet-200">
+            <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white flex items-center justify-center shadow-lg shadow-violet-900/30">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div>
-              <div class="flex items-center text-lg font-bold text-slate-900">
+              <div class="flex items-center text-lg font-bold text-white">
                 展开 AI 文案助手 <span class="optional-badge">可选</span>
               </div>
-              <div class="text-sm text-slate-500">证书、邀请函、感谢信等 10 类场景一键成文</div>
+              <div class="text-sm text-slate-400">证书、邀请函、感谢信等 10 类场景一键成文</div>
             </div>
           </div>
           <svg id="ai-chevron" class="w-5 h-5 text-slate-400 transform transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
         </button>
-        <div id="ai-panel" class="p-6 md:p-8 border-t border-stone-100" hidden>
-          <div id="ai-scenes" class="flex flex-wrap gap-2 mb-5"></div>
+        <div id="ai-panel" class="p-6 md:p-10 border-t border-white/8" hidden>
+          <div id="ai-scenes" class="flex flex-wrap gap-2 mb-6"></div>
           <div class="grid md:grid-cols-3 gap-4 mb-5">
             <input id="name" type="text" value="张晓明" class="input" placeholder="收件人 / 获奖者姓名" />
             <input id="event" type="text" value="2026 年度销售冠军" class="input" placeholder="事件 / 奖项 / 活动名称" />
             <input id="issuer" type="text" value="字节跳动销售部" class="input" placeholder="颁奖单位 / 主办方" />
           </div>
           <div id="extra-field" class="mb-5" hidden>
-            <label id="extra-label" class="block text-sm font-bold text-slate-700 mb-2"></label>
+            <label id="extra-label" class="block text-sm font-bold text-slate-300 mb-2"></label>
             <input id="extra" type="text" value="" class="input" />
           </div>
           <div class="flex items-center gap-3 mb-5">
@@ -854,37 +1091,40 @@
               生成文案
             </button>
             <button id="btn-copy-result" class="btn-secondary" hidden>复制文案</button>
-            <span id="copy-status" class="text-sm text-slate-400"></span>
+            <span id="copy-status" class="text-sm text-slate-500"></span>
           </div>
-          <div id="copy-output" class="bg-stone-50 rounded-2xl p-5 border border-stone-200 text-sm text-slate-700 whitespace-pre-wrap min-h-[100px]"></div>
+          <div id="copy-output" class="bg-slate-900/50 rounded-2xl p-6 border border-white/8 text-sm text-slate-300 whitespace-pre-wrap min-h-[120px]"></div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section class="py-24 md:py-36 hero-bg relative overflow-hidden">
+  <section class="py-28 md:py-40 hero-bg relative overflow-hidden">
+    <div class="aurora">
+      <div class="aurora-layer" style="top: -30%; left: 10%;"></div>
+      <div class="aurora-layer" style="bottom: -30%; right: 5%; animation-delay: -10s;"></div>
+    </div>
     <div class="hero-grid"></div>
-    <div class="hero-glow w-[450px] h-[450px] bg-blue-600 top-[10%] left-[10%]" style="animation-delay: -12s;"></div>
     <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
       <h2 class="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 reveal">准备好提升文档制作效率了吗？</h2>
-      <p class="text-slate-300 text-lg mb-10 max-w-2xl mx-auto reveal" style="transition-delay: 100ms;">本 Demo 为在线体验版，完整桌面版支持批量生成成百上千份文档、ZIP 打包、SMTP 邮件发送等功能。</p>
-      <a href="#workspace" class="btn-primary text-lg px-10 py-4 reveal" style="transition-delay: 200ms;">立即体验 Demo</a>
+      <p class="text-slate-300 text-lg mb-12 max-w-2xl mx-auto reveal" style="transition-delay: 100ms;">本 Demo 为在线体验版，完整桌面版支持批量生成成百上千份文档、ZIP 打包、SMTP 邮件发送等功能。</p>
+      <a href="#workspace" class="btn-primary text-lg px-10 py-4 reveal magnetic-wrap" style="transition-delay: 200ms;">立即体验 Demo</a>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-slate-900 text-slate-400 py-14 border-t border-slate-800">
+  <footer class="bg-[#05080f] text-slate-400 py-16 border-t border-white/6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2.5 font-bold text-white text-lg">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white">
+      <div class="flex items-center gap-3 font-bold text-white text-lg">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-700 to-blue-900 flex items-center justify-center text-white">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
-        批量文档生成器
+        <span class="font-display">批量文档生成器</span>
       </div>
       <div class="text-sm text-center md:text-right">
-        <p class="text-slate-300 font-bold">TRAE AI 创造力大赛参赛作品</p>
-        <p>学习工作 / 社会公益 · 在线体验版</p>
+        <p class="text-slate-200 font-bold">TRAE AI 创造力大赛参赛作品</p>
+        <p class="text-slate-500">学习工作 / 社会公益 · 在线体验版</p>
       </div>
     </div>
   </footer>
@@ -892,6 +1132,66 @@
   <div id="toast" class="toast"></div>
 
   <script>
+    // --- Particle field ---
+    (function() {
+      const canvas = document.getElementById('particles');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let width, height, particles = [];
+      const count = window.innerWidth < 768 ? 30 : 70;
+
+      function resize() {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          r: Math.random() * 1.6 + 0.4,
+          alpha: Math.random() * 0.5 + 0.15
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > width) p.vx *= -1;
+          if (p.y < 0 || p.y > height) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+          ctx.fill();
+        }
+        // Connect nearby particles
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 110) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(255,255,255,${0.06 * (1 - dist / 110)})`;
+              ctx.lineWidth = 0.6;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
     // --- State ---
     let detectedFields = [];
     let dataRows = [];
@@ -1078,7 +1378,7 @@
       const container = document.getElementById('fields-container');
       document.getElementById('field-count').textContent = detectedFields.length + ' 个';
       if (detectedFields.length === 0) {
-        container.innerHTML = '<span class="text-sm text-slate-400">在模板中使用 {{字段名}} 标记替换位置，点击「识别字段」即可看到结果。</span>';
+        container.innerHTML = '<span class="text-sm text-slate-500">在模板中使用 {{字段名}} 标记替换位置，点击「识别字段」即可看到结果。</span>';
         return;
       }
       container.innerHTML = detectedFields.map((f, idx) => `
@@ -1292,7 +1592,20 @@
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    document.querySelectorAll('.reveal, .reveal-scale').forEach(el => revealObserver.observe(el));
+
+    // Magnetic buttons
+    document.querySelectorAll('.magnetic-wrap').forEach(el => {
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        el.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'translate(0, 0)';
+      });
+    });
 
     // Init
     renderSceneCards();
